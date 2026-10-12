@@ -8,7 +8,7 @@ export interface TeamState {
   now: string;
   state: PublicState;
   team: { name: string; code: string; table_no: string | null; members: string[] };
-  access: "readme" | "all" | "locked";
+  access: "waiting" | "readme" | "all" | "locked";
   files: ManifestDoc[];
   inbox: InboxDoc[];
   citable: string[];

@@ -139,7 +139,8 @@ export default function TeamApp() {
   }
 
   const st = data.state;
-  const canNote = ["lobby", "briefing", "audit", "report"].includes(st.phase);
+  const canNote = ["briefing", "audit", "report"].includes(st.phase);
+  const shut = data.access === "locked" || data.access === "waiting";
   const findingsOpen = reportMeta.status !== "submitted" && (st.phase === "audit" || st.phase === "report");
   const rem = remainingMs(st, now);
   const left = data.vishal.limit - data.vishal.used;
@@ -210,7 +211,7 @@ export default function TeamApp() {
               setSearch(e.target.value);
               if (view.kind !== "drive") setView({ kind: "drive", folder: null });
             }}
-            disabled={data.access === "locked"}
+            disabled={shut}
             placeholder="Search in Nexopoly"
             className="h-full flex-1 bg-transparent text-base text-ink outline-none placeholder:text-ink2"
           />
@@ -305,14 +306,14 @@ export default function TeamApp() {
             <div key={n.id}>
               <button
                 onClick={n.go}
-                disabled={data.access === "locked" && n.id !== "report"}
+                disabled={data.access === "waiting" || (data.access === "locked" && n.id !== "report")}
                 className={`flex h-8 w-full items-center gap-4 rounded-full pl-4 pr-3 text-sm transition disabled:opacity-40 ${n.active ? "bg-selected font-medium text-[#001D35]" : "text-ink hover:bg-hover"}`}
               >
                 <Icon name={n.icon} size={20} fill={n.active} />
                 <span className="flex-1 text-left">{n.label}</span>
                 {!!n.badge && <span className="text-xs font-bold">{n.badge}</span>}
               </button>
-              {n.id === "drive" && data.access !== "locked" && (
+              {n.id === "drive" && !shut && (
                 <div className="ml-6 mt-0.5 space-y-0.5 border-l border-line pl-2">
                   {Array.from(new Set(data.files.map((f) => f.folder)))
                     .sort()
@@ -340,7 +341,9 @@ export default function TeamApp() {
 
         {/* ---------- Main surface ---------- */}
         <main className="mb-4 mr-4 flex min-w-0 flex-1 overflow-hidden rounded-2xl bg-white">
-          {data.access === "locked" && view.kind !== "report" ? (
+          {data.access === "waiting" ? (
+            <Waiting team={data.team.name} />
+          ) : data.access === "locked" && view.kind !== "report" ? (
             <Closed phase={st.phase} report={reportMeta} onView={() => setView({ kind: "report" })} />
           ) : view.kind === "doc" && openDocView ? (
             <>
@@ -457,6 +460,16 @@ function Meter({ label, used, total }: { label: string; used: number; total: num
       <div className="mt-1.5">
         {label}: {used} of {total} used
       </div>
+    </div>
+  );
+}
+
+function Waiting({ team }: { team: string }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
+      <Icon name="hourglass_top" size={56} className="text-primary" />
+      <h1 className="mt-4 font-display text-3xl text-ink">You&apos;re signed in, team {team}</h1>
+      <p className="mt-2 max-w-md text-ink2">The case files open when the organisers start the briefing. Keep this screen open; it updates by itself.</p>
     </div>
   );
 }

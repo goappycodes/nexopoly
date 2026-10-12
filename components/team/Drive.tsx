@@ -30,7 +30,7 @@ export function Drive({
   inbox: InboxDoc[];
   folder: string | null;
   search: string;
-  access: "readme" | "all" | "locked";
+  access: "waiting" | "readme" | "all" | "locked";
   notesByDoc: Map<string, number>;
   onOpenFolder: (f: string | null) => void;
   onOpenDoc: (d: ManifestDoc) => void;

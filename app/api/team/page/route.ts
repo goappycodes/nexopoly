@@ -15,6 +15,7 @@ export const GET = handler(async (req: Request) => {
 
   const e = await getEvent();
   const access = driveAccess(e.phase);
+  if (access === "waiting") throw new HttpError(403, "The Drive opens when the briefing starts.");
   if (access === "locked") throw new HttpError(403, "The Drive is locked.");
   if (access === "readme" && doc.folder !== README_FOLDER) throw new HttpError(403, "This folder opens when the audit starts.");
   if (doc.inject === 1 && !e.inject1_at) throw new HttpError(403, "Not delivered yet");

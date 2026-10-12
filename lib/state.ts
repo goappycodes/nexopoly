@@ -118,9 +118,10 @@ export async function extendPhase(minutes = 5) {
   await updateEvent({ phase_ends_at: new Date(base + minutes * 60_000).toISOString() });
 }
 
-/** Which Drive folders a team can open in each phase. */
-export function driveAccess(phase: Phase): "readme" | "all" | "locked" {
-  if (phase === "lobby" || phase === "briefing") return "readme";
+/** Which Drive folders a team can open in each phase. Nothing opens until the admin starts the briefing. */
+export function driveAccess(phase: Phase): "waiting" | "readme" | "all" | "locked" {
+  if (phase === "lobby") return "waiting";
+  if (phase === "briefing") return "readme";
   if (phase === "audit" || phase === "report") return "all";
   return "locked";
 }

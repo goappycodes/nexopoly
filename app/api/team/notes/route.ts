@@ -10,7 +10,7 @@ const FIELDS = "id,doc_id,page_no,x,y,text,tag,status,created_at,updated_at";
 
 async function assertEditable() {
   const e = await getEvent();
-  if (!["lobby", "briefing", "audit", "report"].includes(e.phase)) throw new HttpError(403, "Notes are locked.");
+  if (!["briefing", "audit", "report"].includes(e.phase)) throw new HttpError(403, "Notes are locked.");
 }
 
 const clean = (b: any) => {

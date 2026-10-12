@@ -28,7 +28,7 @@ export const GET = handler(async () => {
   const current = open.find((r) => r.status === "in_session") ?? null;
 
   const access = driveAccess(e.phase);
-  const files = access === "locked" ? [] : MANIFEST.filter((d) => !d.inject && (access === "all" || d.folder === README_FOLDER));
+  const files = access === "locked" || access === "waiting" ? [] : MANIFEST.filter((d) => !d.inject && (access === "all" || d.folder === README_FOLDER));
   const readSet = new Set((must(reads) as { inject_no: number }[]).map((r) => r.inject_no));
   const inbox = access === "all" && e.inject1_at
     ? MANIFEST.filter((d) => d.inject === 1).map((d) => ({ ...d, modified: e.inject1_at!, read: readSet.has(d.inject!) }))
