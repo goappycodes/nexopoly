@@ -44,57 +44,30 @@ export async function loadPage(docId: string, page: number): Promise<Buffer> {
 const istTime = (d: Date, withSeconds = false) =>
   d.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: withSeconds ? "2-digit" : undefined, hour12: false });
 
-/** Diagonal tiled watermark (team name, code, time) as a transparent PNG. */
-async function overlay(width: number, height: number, label: string): Promise<Buffer> {
-  const key = `${width}x${height}|${label}`;
-  const hit = overlayCache.get(key);
+/** One watermark tile (team name, code, time) as a transparent PNG; sharp repeats it across the page. */
+const TILE_W = 600;
+const TILE_H = 330;
+async function tile(label: string): Promise<Buffer> {
+  const hit = overlayCache.get(label);
   if (hit) return hit;
-  const diag = Math.ceil(Math.sqrt(width * width + height * height));
-  const rows = Math.ceil(diag / 170);
-  const cols = Math.ceil(diag / 520);
   const buf = await renderPng(
     (
-      <div style={{ width, height, display: "flex", position: "relative", overflow: "hidden" }}>
-        <div
-          style={{
-            position: "absolute",
-            left: (width - diag) / 2,
-            top: (height - diag) / 2,
-            width: diag,
-            height: diag,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-around",
-            transform: "rotate(-30deg)",
-          }}
-        >
-          {Array.from({ length: rows }).map((_, r) => (
-            <div key={r} style={{ display: "flex", justifyContent: "space-around", marginLeft: r % 2 ? 260 : 0 }}>
-              {Array.from({ length: cols }).map((__, c) => (
-                <div key={c} style={{ fontSize: 30, color: "rgba(20,20,20,0.10)", fontWeight: 700, whiteSpace: "nowrap" }}>
-                  {label}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+      <div style={{ width: TILE_W, height: TILE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "flex", transform: "rotate(-28deg)", fontSize: 26, fontWeight: 700, color: "rgba(20,20,20,0.10)", whiteSpace: "nowrap" }}>{label}</div>
       </div>
     ),
-    width,
-    height,
+    TILE_W,
+    TILE_H,
   );
-  remember(overlayCache, key, buf, 60);
+  remember(overlayCache, label, buf, 60);
   return buf;
 }
 
 /** Burns the team watermark into a page image and returns WebP bytes. */
 export async function watermarked(src: Buffer, team: { name: string; code: string }) {
-  const meta = await sharp(src).metadata();
-  const width = meta.width ?? 1240;
-  const height = meta.height ?? 1754;
   const label = `${team.name} · ${team.code} · ${istTime(new Date())}`;
-  const ov = await overlay(width, height, label);
-  return sharp(src).composite([{ input: ov }]).webp({ quality: 84 }).toBuffer();
+  const t = await tile(label);
+  return sharp(src).composite([{ input: t, tile: true, blend: "over" }]).webp({ quality: 84 }).toBuffer();
 }
 
 /** Inject 2: the MD's WhatsApp message, with the real deadline filled in. */

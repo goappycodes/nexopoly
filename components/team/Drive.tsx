@@ -14,6 +14,8 @@ const fmtDate = (iso: string) => {
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 };
 
+const plural = (n: number) => `${n} file${n === 1 ? "" : "s"}`;
+
 export function Drive({
   files,
   inbox,
@@ -125,7 +127,7 @@ export function Drive({
                     </td>
                     <td className="hidden text-ink2 lg:table-cell">Himalayan Leaf</td>
                     <td className="hidden text-ink2 md:table-cell">—</td>
-                    <td className="text-ink2">{files.filter((x) => x.folder === f).length} files</td>
+                    <td className="text-ink2">{plural(files.filter((x) => x.folder === f).length)}</td>
                   </tr>
                 ))}
               {showFolders && inbox.length > 0 && (
@@ -138,7 +140,7 @@ export function Drive({
                   </td>
                   <td className="hidden text-ink2 lg:table-cell">Teesta Ventures</td>
                   <td className="hidden text-ink2 md:table-cell">—</td>
-                  <td className="text-ink2">{inbox.length} files</td>
+                  <td className="text-ink2">{plural(inbox.length)}</td>
                 </tr>
               )}
               {shown.map((d) => {

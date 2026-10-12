@@ -1,1 +1,29 @@
-{"company":"Himalayan Leaf Traders Pvt Ltd","claimed_pbt":0,"doc_ids":[]}
+{
+  "company": "Himalayan Leaf Traders Pvt Ltd",
+  "claimed_pbt": 7853420,
+  "doc_ids": [
+    "RM-01",
+    "FS-01",
+    "FS-02",
+    "FS-03",
+    "FS-04",
+    "FS-05",
+    "SL-01",
+    "SL-02",
+    "SL-03",
+    "PR-01",
+    "PR-02",
+    "PR-03",
+    "PR-04",
+    "BNK-01",
+    "BNK-02",
+    "HR-01",
+    "HR-02",
+    "PC-01",
+    "PC-02",
+    "STK-01",
+    "CO-01",
+    "CO-02",
+    "INJ-01"
+  ]
+}
