@@ -77,7 +77,7 @@ Pipeline: see `case/README.md`. After regenerating, run `npm run case:upload` (p
 - Teams: `/`
 - Admin: `/admin` (login cards at `/admin/cards`)
 - Projector: `/display`
-- Faculty review: `/faculty` (password `FACULTY_PASSWORD`; admins can open it too). Shows every document page, each planted anomaly and red herring with its evidence, the restated numbers, and a feedback box on each. Feedback is stored as JSON in the private `secure` bucket under `faculty-feedback/`; "All feedback" lists it with a Copy all button.
+- Faculty review: `/faculty` (password `FACULTY_PASSWORD`; admins can open it too). The same Drive view and document viewer the teams get, with every folder and the Inbox open, plus one **All anomalies** page: restated numbers, every planted issue with its evidence Doc IDs (click to open), the red herrings and the expected recommendation. Read-only.
 
 ## Event-day checklist
 

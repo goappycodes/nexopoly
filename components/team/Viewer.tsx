@@ -8,11 +8,12 @@ import { logEvent } from "./lockdown";
 const ZOOMS = [50, 67, 75, 90, 100, 110, 125, 150, 175, 200];
 const cache = new Map<string, { bmp: ImageBitmap; at: number }>();
 
-async function loadBitmap(docId: string, page: number): Promise<ImageBitmap> {
-  const key = `${docId}/${page}`;
+/** Team pages come through a 60-second signed URL; other viewers (faculty) pass a direct image URL. */
+async function loadBitmap(docId: string, page: number, pageUrl?: (docId: string, page: number) => string): Promise<ImageBitmap> {
+  const key = `${pageUrl ? "direct" : "team"}:${docId}/${page}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < 4 * 60_000) return hit.bmp;
-  const { url } = await api<{ url: string }>(`/api/team/page?doc=${encodeURIComponent(docId)}&p=${page}`);
+  const url = pageUrl ? pageUrl(docId, page) : (await api<{ url: string }>(`/api/team/page?doc=${encodeURIComponent(docId)}&p=${page}`)).url;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(res.status === 409 ? "session_replaced" : "Could not load this page");
   const bmp = await createImageBitmap(await res.blob());
@@ -49,6 +50,8 @@ export function Viewer({
   canNote,
   onBack,
   onClose,
+  pageUrl,
+  trackOpens = true,
 }: {
   doc: ManifestDoc;
   page: number;
@@ -61,6 +64,8 @@ export function Viewer({
   canNote: boolean;
   onBack: () => void;
   onClose: () => void;
+  pageUrl?: (docId: string, page: number) => string;
+  trackOpens?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -74,10 +79,11 @@ export function Viewer({
 
   // Time-on-file logging.
   useEffect(() => {
+    if (!trackOpens) return;
     const opened = Date.now();
     logEvent("file_open", doc.docId);
     return () => logEvent("file_close", doc.docId, { ms: Date.now() - opened });
-  }, [doc.docId]);
+  }, [doc.docId, trackOpens]);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -91,7 +97,7 @@ export function Viewer({
     let cancelled = false;
     setStatus("loading");
     setDraft(null);
-    loadBitmap(doc.docId, page)
+    loadBitmap(doc.docId, page, pageUrl)
       .then((bmp) => {
         if (cancelled || !canvasRef.current) return;
         const c = canvasRef.current;
@@ -106,11 +112,11 @@ export function Viewer({
         setStatus("error");
       });
     // Warm the next page.
-    if (page < doc.pages) loadBitmap(doc.docId, page + 1).catch(() => {});
+    if (page < doc.pages) loadBitmap(doc.docId, page + 1, pageUrl).catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [doc.docId, page, doc.pages]);
+  }, [doc.docId, page, doc.pages, pageUrl]);
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {

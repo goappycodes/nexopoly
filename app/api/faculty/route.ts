@@ -1,11 +1,10 @@
 import { handler, requireFaculty } from "@/lib/session";
 import { MANIFEST, CASE_PUBLIC } from "@/lib/manifest";
 import { answerKey } from "@/lib/answerKey";
-import { listFeedback } from "@/lib/facultyFeedback";
 
 export const dynamic = "force-dynamic";
 
-/** Everything the faculty reviewer needs: all documents, the planted anomalies and their saved feedback. */
+/** Everything the faculty reviewer sees: every case document and the planted anomalies. */
 export const GET = handler(async () => {
   await requireFaculty();
   let key = null;
@@ -22,12 +21,5 @@ export const GET = handler(async () => {
   } catch (e: any) {
     keyError = e.message;
   }
-  return {
-    company: CASE_PUBLIC.company,
-    claimedPbt: CASE_PUBLIC.claimed_pbt,
-    docs: MANIFEST,
-    key,
-    keyError,
-    feedback: await listFeedback(),
-  };
+  return { company: CASE_PUBLIC.company, docs: MANIFEST, key, keyError };
 });
