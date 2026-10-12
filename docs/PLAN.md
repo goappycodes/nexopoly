@@ -23,7 +23,7 @@ Nexopoly is the web app for the NEXIS School of Business finance hackathon on **
 
 | Role | Login | Device | Screens |
 |---|---|---|---|
-| Team | Team name + 6-character code (plus table number and member names on first sign-in) | One laptop per team | Drive, document viewer, notes, Ask Vishal, Inbox, report builder, top bar with phase timer |
+| Team | Team name + 6-character code + the member's own name (plus table number and member names on the team's first sign-in) | One laptop per member, up to the admin's limit (default 3) | Drive, document viewer, notes, Ask Vishal, Inbox, report builder, top bar with phase timer |
 | Admin | `ADMIN_PASSWORD` | Laptop | Event control, live teams, Vishal queue, grading and results, setup, exports |
 | Display | `DISPLAY_PIN` | Projector | Phase and countdown, Vishal queue and session timer, announcements, inject alerts, pitch timer, answer reveal, leaderboard |
 

@@ -51,10 +51,18 @@ export const POST = handler(async (req: Request) => {
     }
     case "reset_code": {
       must(await db().from("teams").update({ code: newCode(), active_session_id: null }).eq("id", b.teamId));
+      must(await db().from("team_sessions").delete().eq("team_id", b.teamId));
+      return { ok: true };
+    }
+    case "devices_per_team": {
+      const n = Number(b.value);
+      if (![1, 2, 3, 4, 5].includes(n)) throw new HttpError(400, "Choose 1 to 5 laptops.");
+      await updateEvent({ devices_per_team: n } as any);
       return { ok: true };
     }
     case "force_logout": {
       must(await db().from("teams").update({ active_session_id: null }).eq("id", b.teamId));
+      must(await db().from("team_sessions").delete().eq("team_id", b.teamId));
       return { ok: true };
     }
     case "reset_event": {

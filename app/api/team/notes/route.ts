@@ -6,7 +6,7 @@ import { NOTE_STATUS, NOTE_TAGS } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const FIELDS = "id,doc_id,page_no,x,y,text,tag,status,created_at,updated_at";
+const FIELDS = "id,doc_id,page_no,x,y,text,tag,status,author,created_at,updated_at";
 
 async function assertEditable() {
   const e = await getEvent();
@@ -39,7 +39,7 @@ export const POST = handler(async (req: Request) => {
   const note = must(
     await db()
       .from("notes")
-      .insert({ team_id: team.id, doc_id: doc.docId, page_no: page, x: pos(b.x), y: pos(b.y), ...clean(b) })
+      .insert({ team_id: team.id, doc_id: doc.docId, page_no: page, x: pos(b.x), y: pos(b.y), author: team.member ?? null, ...clean(b) })
       .select(FIELDS)
       .single(),
   );

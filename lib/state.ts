@@ -19,6 +19,7 @@ export interface EventRow {
   pitch_ends_at: string | null;
   pitch_paused_remaining_ms: number | null;
   leaderboard_published: boolean;
+  devices_per_team: number;
 }
 
 export const toPublic = (e: EventRow): PublicState => ({

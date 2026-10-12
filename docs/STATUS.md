@@ -6,6 +6,7 @@ Last updated: 12 October 2026 (night before the event). Plan and decisions: [PLA
 
 | Area | State | Where |
 |---|---|---|
+| Multi-laptop teams: each member signs in with their own name (limit set in Admin → Setup, default 3; the oldest laptop is signed out past it and logged); notes shared live with author labels; one shared report saved as field-level patches and merged on the server; teammates online shown in the top bar | Done, tested (`scripts/multi-device-test.ts`) | `team_sessions` table, `lib/session.ts`, `components/team/useSharedReport.ts`, `lib/reports.ts` (`applyReportPatch`) |
 | Team sign-in (name + code, table, members; second device ends the first) | Done, smoke-tested | `app/page.tsx`, `app/api/auth/team` |
 | Google Drive-style workspace: folder tree, list/grid, type filters, search, owners, dates | Done | `components/team/Drive.tsx`, `TeamApp.tsx` |
 | Document viewer: canvas pages, zoom 50–200%, page navigation, live watermark | Done | `components/team/Viewer.tsx` |

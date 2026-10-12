@@ -88,6 +88,7 @@ export interface Note {
   text: string;
   tag: string | null;
   status: string | null;
+  author?: string | null;
   created_at: string;
   updated_at: string;
 }

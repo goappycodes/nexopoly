@@ -30,7 +30,9 @@ export interface TeamState {
     busy: boolean;
     history: { question: string; doc_ids: string[]; status: string; expert_note: string | null; created_at: string; ended_at: string | null }[];
   };
-  report: { status: string; submitted_at?: string | null; auto_submitted?: boolean };
+  report: { status: string; submitted_at?: string | null; auto_submitted?: boolean; updated_at?: string | null };
+  you: string | null;
+  devices: { member: string; me: boolean; online: boolean }[];
 }
 
 export type View =

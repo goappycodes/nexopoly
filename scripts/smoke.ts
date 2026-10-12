@@ -46,17 +46,17 @@ const check = (name: string, ok: boolean, extra?: unknown) => {
   const anon = new Client();
   check("team route needs a session", (await anon.call("/api/team/state")).status === 401);
   check("admin route rejects anon", (await anon.call("/api/admin/overview")).status === 401);
-  check("wrong team code rejected", (await anon.call("/api/auth/team", "POST", { name: t1.name, code: "ZZZZZZ", table: "1", members: ["a"] })).status === 401);
+  check("wrong team code rejected", (await anon.call("/api/auth/team", "POST", { name: t1.name, code: "ZZZZZZ", you: "Smoke", table: "1", members: ["a"] })).status === 401);
 
   const teamA = new Client();
-  check("team login", (await teamA.call("/api/auth/team", "POST", { name: t1.name.toLowerCase(), code: t1.code, table: "7", members: ["Asha", "Bina", "Chetan"] })).status === 200);
+  check("team login", (await teamA.call("/api/auth/team", "POST", { name: t1.name.toLowerCase(), code: t1.code, you: "Smoke", table: "7", members: ["Asha", "Bina", "Chetan"] })).status === 200);
   let s = (await teamA.call("/api/team/state")).data;
   check("team state in lobby", s.state?.phase === "lobby" || !!s.state, s);
 
-  // Second device ends the first session.
+  // A second member's laptop works alongside the first (multi-laptop teams).
   const teamA2 = new Client();
-  await teamA2.call("/api/auth/team", "POST", { name: t1.name, code: t1.code });
-  check("first device kicked after second login", (await teamA.call("/api/team/state")).status === 409);
+  await teamA2.call("/api/auth/team", "POST", { name: t1.name, code: t1.code, you: "Smoke 2" });
+  check("second laptop signs in alongside the first", (await teamA.call("/api/team/state")).status === 200);
   const team = teamA2;
 
   check("open briefing", (await act("phase", { phase: "briefing" })).status === 200);

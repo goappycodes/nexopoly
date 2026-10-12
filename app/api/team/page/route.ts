@@ -20,6 +20,6 @@ export const GET = handler(async (req: Request) => {
   if (access === "readme" && doc.folder !== README_FOLDER) throw new HttpError(403, "This folder opens when the audit starts.");
   if (doc.inject === 1 && !e.inject1_at) throw new HttpError(403, "Not delivered yet");
 
-  const token = await sign({ t: team.id, s: team.active_session_id, d: docId, p: page }, "60s");
+  const token = await sign({ t: team.id, s: team.session_id, d: docId, p: page }, "60s");
   return { url: `/api/img?t=${encodeURIComponent(token)}` };
 });

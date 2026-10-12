@@ -8,13 +8,14 @@ export const dynamic = "force-dynamic";
 export const GET = handler(async () => {
   await requireAdmin();
   const e = await getEvent();
-  const [teams, stats, reports, scores, requests, used] = await Promise.all([
+  const [teams, stats, reports, scores, requests, used, devices] = await Promise.all([
     db().from("teams").select("*").order("name"),
     db().from("team_stats").select("*"),
     db().from("reports").select("team_id,status,submitted_at,auto_submitted,updated_at"),
     db().from("team_scores").select("*"),
     db().from("expert_requests").select("*").order("position"),
     usedSessions(),
+    db().from("team_sessions").select("team_id,member,last_seen_at").order("created_at"),
   ]);
   const byId = <T extends { team_id: string }>(rows: T[]) => new Map(rows.map((r) => [r.team_id, r]));
   const statMap = byId(must(stats) as any[]);
@@ -37,6 +38,9 @@ export const GET = handler(async () => {
       table_no: t.table_no,
       members: t.members,
       online: !!t.last_seen_at && Date.now() - Date.parse(t.last_seen_at) < 30_000,
+      devices: (must(devices) as any[])
+        .filter((d) => d.team_id === t.id)
+        .map((d) => ({ member: d.member ?? "Laptop", online: Date.now() - Date.parse(d.last_seen_at) < 30_000 })),
       last_seen_at: t.last_seen_at,
       vishal_used: used.get(t.id) ?? 0,
       vishal_limit: sessionLimit(t),

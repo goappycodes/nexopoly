@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { emptyReport, phaseLabel, wordCount, type ManifestDoc, type Note, type ReportData } from "@/lib/types";
+import { phaseLabel, wordCount, type ManifestDoc, type Note } from "@/lib/types";
 import { Brand, Button, Icon, Snackbar, api, chime, fmtClock, remainingMs, useTick } from "../ui";
 import { useLive } from "../live";
 import { useLockdown } from "./lockdown";
@@ -10,6 +10,7 @@ import { Drive } from "./Drive";
 import { Viewer } from "./Viewer";
 import { AllNotes, NotesPanel, useNotes } from "./Notes";
 import { ReportBuilder } from "./Report";
+import { useSharedReport } from "./useSharedReport";
 import { AskVishalDialog, VishalPanel } from "./Vishal";
 import type { TeamState, View } from "./types";
 
@@ -37,53 +38,16 @@ export default function TeamApp() {
   useLockdown(currentDoc);
   const { notes, folders, create, update, remove } = useNotes(!!data);
 
-  // ---- Report state lives here so notes can be promoted into it. ----
-  const [report, setReportState] = useState<ReportData>(emptyReport());
-  const [reportMeta, setReportMeta] = useState<{ status: string; submitted_at: string | null; auto_submitted: boolean }>({ status: "not_started", submitted_at: null, auto_submitted: false });
-  const [savedAt, setSavedAt] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const dirty = useRef(false);
-  const reportLoaded = useRef(false);
-  const reportRef = useRef(report);
-  reportRef.current = report;
-
-  const loadReport = useCallback(async () => {
-    const r = await api<{ report: ReportData; status: string; submitted_at: string | null; auto_submitted: boolean }>("/api/team/report");
-    setReportState(r.report);
-    setReportMeta({ status: r.status, submitted_at: r.submitted_at, auto_submitted: r.auto_submitted });
-    reportLoaded.current = true;
-  }, []);
-  useEffect(() => {
-    if (data && !reportLoaded.current) loadReport().catch(() => {});
-  }, [data, loadReport]);
-  useEffect(() => {
-    if (data?.report.status === "submitted" && reportMeta.status !== "submitted") loadReport().catch(() => {});
-  }, [data?.report.status, reportMeta.status, loadReport]);
-
-  const setReport = useCallback((fn: (r: ReportData) => ReportData) => {
-    dirty.current = true;
-    setReportState(fn);
-  }, []);
-
-  const phase = data?.state.phase;
-  const saveReport = useCallback(async () => {
-    if (!dirty.current || !reportLoaded.current) return;
-    if (phase !== "audit" && phase !== "report") return;
-    dirty.current = false;
-    setSaving(true);
-    try {
-      const r = await api<{ savedAt: string }>("/api/team/report", { method: "PUT", json: { data: reportRef.current } });
-      setSavedAt(r.savedAt);
-    } catch {
-      dirty.current = true;
-    } finally {
-      setSaving(false);
-    }
-  }, [phase]);
-  useEffect(() => {
-    const t = setInterval(saveReport, 10_000);
-    return () => clearInterval(t);
-  }, [saveReport]);
+  // ---- One report shared by every laptop of the team (notes can be promoted into it). ----
+  const {
+    report,
+    setReport,
+    meta: reportMeta,
+    savedAt,
+    saving,
+    save: saveReport,
+    submit: submitShared,
+  } = useSharedReport(!!data, data?.state.phase, data?.report.updated_at, data?.report.status);
   useEffect(() => {
     saveReport();
   }, [view.kind, saveReport]);
@@ -122,8 +86,8 @@ export default function TeamApp() {
     return (
       <Full>
         <Icon name="devices" size={56} className="text-primary" />
-        <h1 className="mt-4 font-display text-3xl">Signed in on another device</h1>
-        <p className="mt-2 max-w-md text-ink2">Your team signed in on a different laptop, so this session ended. This has been logged.</p>
+        <h1 className="mt-4 font-display text-3xl">This laptop was signed out</h1>
+        <p className="mt-2 max-w-md text-ink2">This laptop was signed out, either by the organisers or because too many laptops signed in for your team. This has been logged.</p>
         <Button className="mt-6" onClick={() => router.replace("/")}>
           Sign in again
         </Button>
@@ -179,11 +143,9 @@ export default function TeamApp() {
   };
 
   const submitReport = async () => {
-    await api("/api/team/report/submit", { method: "POST", json: { data: report } });
-    dirty.current = false;
-    await loadReport();
+    await submitShared();
     reload();
-    setToast("Report submitted.");
+    setToast("Report submitted for your whole team.");
   };
 
   const openDocView = view.kind === "doc" ? docs.get(view.docId) : undefined;
@@ -234,6 +196,21 @@ export default function TeamApp() {
           <div className="hidden items-center gap-1.5 rounded-full bg-white px-3 py-2 text-sm text-ink2 shadow-e1 lg:flex" title="Expert meetings left">
             <Icon name="record_voice_over" size={18} /> {left} left
           </div>
+          {/* Teammates signed in on other laptops, like collaborators in a shared doc. */}
+          <div className="flex -space-x-2">
+            {data.devices
+              .filter((d) => !d.me && d.online)
+              .map((d, i) => (
+                <span
+                  key={i}
+                  title={`${d.member} is working on another laptop`}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-sm font-medium text-white"
+                  style={{ background: ["#188038", "#E37400", "#9334E6", "#D93025"][i % 4] }}
+                >
+                  {d.member[0]?.toUpperCase()}
+                </span>
+              ))}
+          </div>
           <div className="relative">
             <button onClick={() => setMenu(!menu)} className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-base font-medium text-white" title={data.team.name}>
               {data.team.name[0]}
@@ -245,6 +222,7 @@ export default function TeamApp() {
                   <div className="rounded-3xl bg-white p-5 text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary font-display text-3xl text-white">{data.team.name[0]}</div>
                     <div className="mt-3 font-display text-xl">Team {data.team.name}</div>
+                    {data.you && <div className="text-sm text-ink">Signed in as {data.you}</div>}
                     <div className="text-sm text-ink2">Table {data.team.table_no}</div>
                     <div className="mt-2 text-sm text-ink2">{data.team.members.join(", ")}</div>
                   </div>

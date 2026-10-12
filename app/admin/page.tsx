@@ -254,7 +254,7 @@ function Control({ e, data, act, rem }: { e: any; data: any; act: Act; rem: numb
         </div>
         The app makes copying slow and visible; it cannot make it impossible. Screenshots and phone cameras cannot be blocked by a browser, and a determined student with
         DevTools can reach the page images. Every page carries a watermark with the team name, code and time, so a leaked image is traceable. The event rules carry the
-        rest: phones in bags, one laptop per team, no AI tools.
+        rest: phones in bags, one laptop per member, no AI tools.
       </div>
     </div>
   );
@@ -323,11 +323,12 @@ function Teams({ data, act }: { data: any; act: Act }) {
           <tr className="h-10 border-b border-line text-left text-xs text-ink2">
             <th className="pl-2 font-medium">Team</th>
             <th className="font-medium">Table</th>
+            <th className="font-medium">Laptops</th>
             <th className="font-medium">Files</th>
             <th className="font-medium">Notes</th>
             <th className="font-medium">Expert</th>
             <th className="font-medium">Blocked</th>
-            <th className="font-medium">2nd logins</th>
+            <th className="font-medium" title="Laptops signed out because the team went over its limit">Bumped</th>
             <th className="font-medium">Report</th>
           </tr>
         </thead>
@@ -342,6 +343,16 @@ function Teams({ data, act }: { data: any; act: Act }) {
                   </span>
                 </td>
                 <td>{t.table_no ?? "—"}</td>
+                <td>
+                  <span className="flex flex-wrap gap-1">
+                    {(t.devices ?? []).map((d: any, i: number) => (
+                      <span key={i} title={d.online ? "Online" : "Not seen in the last 30 seconds"} className={`rounded-md px-1.5 py-0.5 text-xs ${d.online ? "bg-[#C4EED0] text-[#0D652D]" : "bg-tint text-ink2"}`}>
+                        {d.member}
+                      </span>
+                    ))}
+                    {!(t.devices ?? []).length && <span className="text-ink2">—</span>}
+                  </span>
+                </td>
                 <td>{t.stats?.files_opened ?? 0}</td>
                 <td>{t.stats?.notes ?? 0}</td>
                 <td>
@@ -376,7 +387,7 @@ function ActivityDialog({ team, onClose, act }: { team: any; onClose: () => void
       </div>
       <div className="mb-4 flex flex-wrap gap-2">
         <Button variant="outlined" onClick={() => act("add_session", { teamId: team.id }, "Added an expert meeting")}>+1 expert meeting</Button>
-        <Button variant="outlined" onClick={() => act("force_logout", { teamId: team.id }, "Signed out")}>Sign out device</Button>
+        <Button variant="outlined" onClick={() => act("force_logout", { teamId: team.id }, "All laptops signed out")}>Sign out all laptops</Button>
         <Button variant="outlined" onClick={() => act("reset_code", { teamId: team.id }, "New code issued")}>Reset code</Button>
       </div>
       <div className="scroll-thin max-h-[50vh] overflow-auto rounded-xl border border-line">
@@ -673,6 +684,17 @@ function Setup({ e, data, act }: { e: any; data: any; act: Act }) {
               <span className="font-mono text-xs">{t.code}</span>
               <IconButton icon="delete" title="Delete team" className="!h-8 !w-8" onClick={() => confirmDelete(t, act)} />
             </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <H sub="Each member signs in on their own laptop with their name; the team shares notes and one report. Going over the limit signs out the team's oldest laptop and shows it in Live teams.">Laptops per team</H>
+        <div className="flex gap-2">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Button key={n} variant={(e.devices_per_team ?? 3) === n ? "filled" : "outlined"} onClick={() => act("devices_per_team", { value: n }, `Up to ${n} laptop${n === 1 ? "" : "s"} per team`)}>
+              {n}
+            </Button>
           ))}
         </div>
       </div>

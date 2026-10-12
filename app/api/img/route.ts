@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readSession, verify } from "@/lib/session";
+import { findDevice, readSession, verify } from "@/lib/session";
 import { db } from "@/lib/db";
 import { loadPage, watermarked } from "@/lib/images";
 
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   if (session?.role !== "team" || session.teamId !== claims.t || session.sid !== claims.s) return deny(403, "Not signed in");
 
   const { data: team } = await db().from("teams").select("name,code,active_session_id").eq("id", claims.t).maybeSingle();
-  if (!team || team.active_session_id !== claims.s) return deny(409, "Session replaced");
+  if (!team || !(await findDevice(claims.t, claims.s, team.active_session_id))) return deny(409, "Session replaced");
 
   try {
     const src = await loadPage(claims.d, claims.p);

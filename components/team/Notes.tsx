@@ -5,41 +5,67 @@ import { NOTE_STATUS, NOTE_TAGS, type ManifestDoc, type Note } from "@/lib/types
 import { Chip, FileIconColored, Icon, IconButton, api } from "../ui";
 import { isOwnClip, logEvent, rememberCopy } from "./lockdown";
 
-/** Team notes with optimistic edits and debounced autosave. */
+/**
+ * Team notes, shared live between every laptop of the team: polled every few seconds, with
+ * optimistic local edits. Notes this laptop is still editing keep their local version until saved.
+ */
 export function useNotes(enabled: boolean) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [folders, setFolders] = useState<Record<string, string>>({});
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const pending = useRef(new Map<string, Partial<Note>>());
+  const editedAt = useRef(new Map<string, number>());
+  const deleted = useRef(new Set<string>());
+
+  const refresh = useCallback(async () => {
+    try {
+      const d = await api<{ notes: Note[]; folders: Record<string, string> }>("/api/team/notes");
+      setFolders(d.folders);
+      setNotes((local) => {
+        const mine = new Map(local.map((n) => [n.id, n]));
+        return d.notes
+          .filter((n) => !deleted.current.has(n.id))
+          .map((n) => {
+            const busy = pending.current.has(n.id) || Date.now() - (editedAt.current.get(n.id) ?? 0) < 3000;
+            return busy && mine.has(n.id) ? mine.get(n.id)! : n;
+          });
+      });
+    } catch {}
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
-    api<{ notes: Note[]; folders: Record<string, string> }>("/api/team/notes")
-      .then((d) => {
-        setNotes(d.notes);
-        setFolders(d.folders);
-      })
-      .catch(() => {});
-  }, [enabled]);
+    refresh();
+    const t = setInterval(refresh, 4000);
+    return () => clearInterval(t);
+  }, [enabled, refresh]);
 
   const create = useCallback(async (doc_id: string, page_no: number, x: number | null, y: number | null, text = "") => {
     const { note } = await api<{ note: Note }>("/api/team/notes", { method: "POST", json: { doc_id, page_no, x, y, text } });
-    setNotes((n) => [...n, note]);
+    setNotes((n) => (n.some((m) => m.id === note.id) ? n : [...n, note]));
     return note;
   }, []);
 
   const update = useCallback((id: string, patch: Partial<Note>) => {
     setNotes((n) => n.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+    editedAt.current.set(id, Date.now());
+    // Accumulate, so a tag change right after typing doesn't drop the typed text.
+    pending.current.set(id, { ...(pending.current.get(id) ?? {}), ...patch });
     const t = timers.current.get(id);
     if (t) clearTimeout(t);
     timers.current.set(
       id,
       setTimeout(() => {
-        api("/api/team/notes", { method: "PATCH", json: { id, ...patch } }).catch(() => {});
+        const body = pending.current.get(id);
+        pending.current.delete(id);
+        timers.current.delete(id);
+        if (body) api("/api/team/notes", { method: "PATCH", json: { id, ...body } }).catch(() => {});
       }, "text" in patch ? 500 : 0),
     );
   }, []);
 
   const remove = useCallback(async (id: string) => {
+    deleted.current.add(id);
     setNotes((n) => n.filter((x) => x.id !== id));
     await api(`/api/team/notes?id=${id}`, { method: "DELETE" }).catch(() => {});
   }, []);
@@ -93,6 +119,7 @@ export function NoteCard({
         )}
         {docLabel}
         <span>Page {note.page_no}</span>
+        {note.author && <span className="truncate rounded-md bg-[#E8DEF8] px-1.5 py-0.5 text-[11px] text-[#4A4458]" title="Written by">{note.author}</span>}
         <span className="ml-auto" />
         {canEdit && <IconButton icon="delete" title="Delete note" className="!h-7 !w-7 [&_.msi]:!text-[18px]" onClick={onRemove} />}
       </div>

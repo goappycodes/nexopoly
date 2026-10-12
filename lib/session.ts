@@ -73,14 +73,33 @@ export async function requireFaculty() {
   return s;
 }
 
-/** Returns the signed-in team. A session replaced by a newer login on another device is rejected. */
+/**
+ * Looks up one signed-in laptop. Each team member can sign in on their own laptop (up to the
+ * admin's limit); a laptop signed out by the limit or by the admin no longer has a row.
+ * Sessions created before multi-laptop sign-in only exist as teams.active_session_id and are
+ * adopted into team_sessions on first use.
+ */
+export async function findDevice(teamId: string, sid: string | undefined, legacySid?: string | null) {
+  if (!sid) return null;
+  const { data } = await db().from("team_sessions").select("id,member,last_seen_at").eq("id", sid).eq("team_id", teamId).maybeSingle();
+  if (data) return data as { id: string; member: string | null; last_seen_at: string };
+  if (legacySid && legacySid === sid) {
+    const row = { id: sid, team_id: teamId, member: null };
+    await db().from("team_sessions").upsert(row);
+    return { id: sid, member: null, last_seen_at: new Date().toISOString() };
+  }
+  return null;
+}
+
+/** Returns the signed-in team and this laptop's session. A signed-out laptop is rejected with 409. */
 export async function requireTeam() {
   const s = await readSession();
   if (s?.role !== "team" || !s.teamId) throw new HttpError(401, "Team sign-in required");
   const { data: team } = await db().from("teams").select("*").eq("id", s.teamId).maybeSingle();
   if (!team) throw new HttpError(401, "Team not found");
-  if (team.active_session_id !== s.sid) throw new HttpError(409, "session_replaced");
-  return team as TeamRow;
+  const device = await findDevice(team.id, s.sid, team.active_session_id);
+  if (!device) throw new HttpError(409, "session_replaced");
+  return { ...(team as TeamRow), session_id: device.id, member: device.member, device_seen_at: device.last_seen_at };
 }
 
 export interface TeamRow {
@@ -94,6 +113,9 @@ export interface TeamRow {
   cfo_used: number;
   active_session_id: string | null;
   last_seen_at: string | null;
+  session_id?: string;
+  member?: string | null;
+  device_seen_at?: string;
 }
 
 /** Wraps a route handler: converts thrown HttpErrors into JSON responses and stamps server time. */

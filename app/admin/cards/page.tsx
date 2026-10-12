@@ -38,7 +38,7 @@ export default function Cards() {
               <div className="text-right text-xs text-ink2">
                 Sign in at <b className="text-ink">{origin}</b>
                 <br />
-                One laptop per team · phones in bags · no AI tools
+                Each member signs in with their own name · phones in bags · no AI tools
               </div>
             </div>
           </div>
