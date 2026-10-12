@@ -15,13 +15,12 @@ Last updated: 12 October 2026 (night before the event). Plan and decisions: [PLA
 | Report builder: fixed 8-section form, word limits, Doc ID pickers, restated PBT calculator, paste blocked, 10-second autosave, findings-only during the audit, submit-once | Done, smoke-tested | `components/team/Report.tsx`, `app/api/team/report` |
 | Auto-submit at the end of the report phase; PDF and JSON stored | Done, smoke-tested | `lib/reports.ts`, `lib/state.ts` |
 | Ask Vishal: question gate, one open request (enforced by the database), cancel, position and wait, live 2-minute countdown, Time up | Done, smoke-tested | `components/team/Vishal.tsx`, `app/api/team/vishal` |
-| Accounts desk (2 CFO questions, scripted answers from the answer key, admin overwrite) | Done | `components/team/Desk.tsx`, `app/api/team/cfo` |
 | Inject 1 (pre-rendered whistleblower email); Inbox banner and chime. Inject 2 was removed on 12 Oct | Done, smoke-tested | `app/api/team/state` |
 | Projector: phase countdown, timeline, Vishal queue with current session and Time up, announcements, inject flash, pitch timer (red at 15 s), reveal, leaderboard with top 3 | Done | `app/display/page.tsx` |
 | Admin console: run of show with confirms, pause/resume/+5, queue and desk toggles, announcements, pitch control, live teams with red flags and activity log, queue control, desk overrides, grading, setup, login cards, reset, exports | Done | `app/admin/page.tsx`, `app/admin/cards`, `app/api/admin/*` |
 | AI grading (Claude Opus 5.5, 2 runs, gap flag, injection flag, accept/edit with a reason, pitch marks, leaderboard) | Built; needs `ANTHROPIC_API_KEY` | `lib/grading.ts` |
 | Exports: report PDFs zip, report JSON, scores CSV, activity CSV | Done | `app/api/admin/export` |
-| Case content: 22 documents (36 pages) plus Inject 1, 828 validation checks passing, answer key, 20-topic CFO answer bank | Done, uploaded to private storage | `case/` (local only, backed up privately) |
+| Case content: 22 documents (36 pages) plus Inject 1, 828 validation checks passing, answer key | Done, uploaded to private storage | `case/` (local only, backed up privately) |
 
 `scripts/smoke.ts` covers the full event flow through the API: logins, second-device kick, phases, pause/extend, signed images, queue rules, projector privacy, notes, phase-gated report saving, submit, auto-submit, Drive lock, PDF, exports, and checks that no route leaks the answer key. It passes against production (https://nexopoly.vercel.app) with the real documents.
 

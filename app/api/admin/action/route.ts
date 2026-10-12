@@ -65,7 +65,7 @@ export const POST = handler(async (req: Request) => {
       must(await db().from("activity_log").delete().gte("id", 0));
       must(await db().from("teams").update({ active_session_id: null, cfo_used: 0, vishal_extra: 0, table_no: null, members: [] }).not("id", "is", null));
       await updateEvent({
-        phase: "lobby", phase_started_at: null, phase_ends_at: null, paused: false, paused_remaining_ms: null, queue_open: false, cfo_open: false,
+        phase: "lobby", phase_started_at: null, phase_ends_at: null, paused: false, paused_remaining_ms: null, queue_open: false,
         inject1_at: null, announcement: null, announcement_at: null, pitch_order: [], pitch_index: 0,
         pitch_ends_at: null, pitch_paused_remaining_ms: null, leaderboard_published: false,
       });
@@ -92,7 +92,7 @@ export const POST = handler(async (req: Request) => {
       return { ok: true };
     }
     case "toggle": {
-      if (b.key !== "queue_open" && b.key !== "cfo_open") throw new HttpError(400, "Unknown toggle");
+      if (b.key !== "queue_open") throw new HttpError(400, "Unknown toggle");
       await updateEvent({ [b.key]: !!b.value } as any);
       return { ok: true };
     }
@@ -173,15 +173,6 @@ export const POST = handler(async (req: Request) => {
       const t = must(await db().from("teams").select("vishal_extra").eq("id", b.teamId).single()) as any;
       must(await db().from("teams").update({ vishal_extra: (t.vishal_extra ?? 0) + (b.remove ? -1 : 1) }).eq("id", b.teamId));
       await ping("queue");
-      return { ok: true };
-    }
-
-    // ---------- Accounts desk ----------
-    case "cfo_override": {
-      const answer = String(b.answer ?? "").trim().slice(0, 600);
-      if (!answer) throw new HttpError(400, "Type the new answer.");
-      must(await db().from("cfo_questions").update({ answer, overridden_by_admin: true }).eq("id", b.id));
-      await ping("cfo");
       return { ok: true };
     }
 

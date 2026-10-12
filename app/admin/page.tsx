@@ -5,7 +5,7 @@ import { phaseLabel } from "@/lib/types";
 import { Brand, Button, Dialog, Icon, IconButton, Snackbar, TextField, api, fmtClock, remainingMs, useTick } from "@/components/ui";
 import { useLive } from "@/components/live";
 
-type Tab = "control" | "teams" | "queue" | "desk" | "grading" | "setup" | "exports";
+type Tab = "control" | "teams" | "queue" | "grading" | "setup" | "exports";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -75,7 +75,6 @@ function Console({ data, reload }: { data: any; reload: () => void }) {
     { id: "control", icon: "tune", label: "Event control" },
     { id: "teams", icon: "groups", label: "Live teams" },
     { id: "queue", icon: "record_voice_over", label: "Vishal queue", badge: data.queue.filter((q: any) => q.status === "waiting").length },
-    { id: "desk", icon: "support_agent", label: "Accounts desk", badge: data.cfo.filter((q: any) => now - Date.parse(q.created_at) < 60_000 && !q.overridden_by_admin).length },
     { id: "grading", icon: "grading", label: "Grading & results" },
     { id: "setup", icon: "settings", label: "Setup" },
     { id: "exports", icon: "download", label: "Exports" },
@@ -115,7 +114,6 @@ function Console({ data, reload }: { data: any; reload: () => void }) {
           {tab === "control" && <Control e={e} data={data} act={act} rem={rem} />}
           {tab === "teams" && <Teams data={data} act={act} />}
           {tab === "queue" && <QueuePanel data={data} act={act} now={now} />}
-          {tab === "desk" && <DeskPanel data={data} act={act} now={now} />}
           {tab === "grading" && <Grading data={data} act={act} toast={setToast} />}
           {tab === "setup" && <Setup e={e} data={data} act={act} />}
           {tab === "exports" && <Exports />}
@@ -176,7 +174,7 @@ const STEPS: { at: string; label: string; icon: string; run: (act: Act) => Promi
   { at: "0:00", label: "Open briefing", icon: "play_circle", run: (a) => a("phase", { phase: "briefing" }), done: (e) => e.phase !== "lobby", detail: "Teams see only the Read Me folder. 10-minute countdown." },
   { at: "0:10", label: "Start audit", icon: "folder_open", run: (a) => a("phase", { phase: "audit" }), done: (e) => !["lobby", "briefing"].includes(e.phase), detail: "All folders unlock, the 55-minute timer starts, the findings table opens and Vishal's queue opens." },
   { at: "0:35", label: "Push Inject 1", icon: "mark_email_unread", run: (a) => a("inject1"), done: (e) => !!e.inject1_at, detail: "The whistleblower email lands in every team's Inbox with a banner and sound." },
-  { at: "1:05", label: "Open report", icon: "assignment", run: (a) => a("phase", { phase: "report" }), done: (e) => !["lobby", "briefing", "audit"].includes(e.phase), detail: "Closes the Accounts desk, unlocks the full report, starts the 15-minute timer." },
+  { at: "1:05", label: "Open report", icon: "assignment", run: (a) => a("phase", { phase: "report" }), done: (e) => !["lobby", "briefing", "audit"].includes(e.phase), detail: "Unlocks the full report and starts the 15-minute timer." },
   { at: "1:20", label: "Close submissions", icon: "lock", run: (a) => a("close_submissions"), done: (e) => ["closed", "pitches", "reveal", "results"].includes(e.phase), detail: "Locks reports and the Drive. Unsubmitted drafts are submitted automatically. (Also happens by itself when the report timer ends.)" },
   { at: "1:20", label: "Start pitches", icon: "co_present", run: (a) => a("phase", { phase: "pitches" }), done: (e) => ["pitches", "reveal", "results"].includes(e.phase), detail: "Projector switches to the pitch order and timer." },
   { at: "1:45", label: "Reveal answers", icon: "visibility", run: (a) => a("phase", { phase: "reveal" }), done: (e) => ["reveal", "results"].includes(e.phase), detail: "Projector shows the answer key summary." },
@@ -237,7 +235,6 @@ function Control({ e, data, act, rem }: { e: any; data: any; act: Act; rem: numb
           on={e.queue_open}
           onChange={(v) => act("toggle", { key: "queue_open", value: v }, v ? "Queue opened" : "Queue closed")}
         />
-        <Toggle title="Accounts desk (CFO questions)" hint="Open at 0:20, close at 1:00." on={e.cfo_open} onChange={(v) => act("toggle", { key: "cfo_open", value: v }, v ? "Desk opened" : "Desk closed")} />
       </div>
 
       <div>
@@ -329,7 +326,6 @@ function Teams({ data, act }: { data: any; act: Act }) {
             <th className="font-medium">Files</th>
             <th className="font-medium">Notes</th>
             <th className="font-medium">Vishal</th>
-            <th className="font-medium">CFO Qs</th>
             <th className="font-medium">Blocked</th>
             <th className="font-medium">2nd logins</th>
             <th className="font-medium">Report</th>
@@ -351,7 +347,6 @@ function Teams({ data, act }: { data: any; act: Act }) {
                 <td>
                   {t.vishal_used}/{t.vishal_limit}
                 </td>
-                <td>{t.cfo_used}/2</td>
                 <td>{t.stats?.blocked ?? 0}</td>
                 <td className={(t.stats?.second_logins ?? 0) > 0 ? "font-bold text-danger" : ""}>{t.stats?.second_logins ?? 0}</td>
                 <td>{reportBadge(t.report)}</td>
@@ -487,47 +482,6 @@ function QueuePanel({ data, act, now }: { data: any; act: Act; now: number }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function DeskPanel({ data, act, now }: { data: any; act: Act; now: number }) {
-  const [edit, setEdit] = useState<{ id: string; text: string } | null>(null);
-  return (
-    <div>
-      <H sub="Scripted answers go out instantly. Overwrite one within 60 seconds if it's wrong; the team's screen updates.">Accounts desk</H>
-      <div className="space-y-3">
-        {data.cfo.map((q: any) => {
-          const fresh = now - Date.parse(q.created_at) < 60_000;
-          return (
-            <div key={q.id} className={`rounded-2xl border p-4 ${fresh ? "border-primary bg-[#EDF2FA]" : "border-line"}`}>
-              <div className="flex items-center gap-2 text-xs text-ink2">
-                <span className="font-medium text-ink">{q.team_name}</span>
-                <span>{new Date(q.created_at).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })}</span>
-                {q.matched_topic ? <span className="rounded bg-tint px-1.5">{q.matched_topic}</span> : <span className="rounded bg-[#FEF7E0] px-1.5 text-[#7A4F01]">fallback</span>}
-                {q.overridden_by_admin && <span className="rounded bg-[#E8DEF8] px-1.5 text-[#4A4458]">overridden</span>}
-                {fresh && <span className="ml-auto font-mono text-primary">{60 - Math.floor((now - Date.parse(q.created_at)) / 1000)}s</span>}
-              </div>
-              <div className="mt-2 text-sm font-medium">Q: {q.question}</div>
-              {edit?.id === q.id ? (
-                <div className="mt-2 flex gap-2">
-                  <textarea value={edit!.text} onChange={(x) => setEdit({ id: q.id, text: x.target.value })} rows={2} className="flex-1 rounded-lg border border-outline p-2 text-sm outline-none focus:border-primary" />
-                  <div className="flex flex-col gap-1">
-                    <Button onClick={async () => { await act("cfo_override", { id: q.id, answer: edit!.text }, "Answer replaced"); setEdit(null); }}>Save</Button>
-                    <Button variant="text" onClick={() => setEdit(null)}>Cancel</Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-1 flex items-start gap-2 text-sm text-ink2">
-                  <span className="flex-1">A: {q.answer}</span>
-                  <Button variant="text" onClick={() => setEdit({ id: q.id, text: q.answer })}>Overwrite</Button>
-                </div>
-              )}
-            </div>
-          );
-        })}
-        {data.cfo.length === 0 && <p className="text-sm text-ink2">No questions yet.</p>}
-      </div>
     </div>
   );
 }

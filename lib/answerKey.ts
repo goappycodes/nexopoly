@@ -46,17 +46,3 @@ export async function answerKey(): Promise<AnswerKey> {
   return key;
 }
 
-const FALLBACK = "I will need to check with Sir and get back to you.";
-
-/** Scripted Accounts Manager: picks the topic with the most keyword hits. */
-export async function cfoAnswer(question: string): Promise<{ topic: string | null; answer: string }> {
-  const key = await answerKey();
-  const q = ` ${question.toLowerCase().replace(/[^a-z0-9₹. ]+/g, " ")} `;
-  let best: { topic: string; answer: string; score: number } | null = null;
-  for (const t of key.cfo_answers ?? []) {
-    let score = 0;
-    for (const k of t.keywords) if (q.includes(k.toLowerCase())) score += k.length > 5 ? 2 : 1;
-    if (score > 0 && (!best || score > best.score)) best = { topic: t.topic, answer: t.answer, score };
-  }
-  return best ? { topic: best.topic, answer: best.answer } : { topic: null, answer: key.cfo_fallback || FALLBACK };
-}

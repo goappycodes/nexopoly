@@ -10,11 +10,10 @@ export const GET = handler(async () => {
   const team = await requireTeam();
   const e = await getEvent();
 
-  const [open, used, history, cfo, reads, report] = await Promise.all([
+  const [open, used, history, reads, report] = await Promise.all([
     openRequests(),
     usedSessions(team.id),
     db().from("expert_requests").select("question,doc_ids,status,expert_note,created_at,ended_at").eq("team_id", team.id).in("status", ["done", "skipped"]).order("created_at"),
-    db().from("cfo_questions").select("id,question,answer,created_at").eq("team_id", team.id).order("created_at"),
     db().from("inbox_reads").select("inject_no").eq("team_id", team.id),
     db().from("reports").select("status,submitted_at,auto_submitted,updated_at").eq("team_id", team.id).maybeSingle(),
   ]);
@@ -60,7 +59,6 @@ export const GET = handler(async () => {
       busy: !!current,
       history: must(history),
     },
-    cfo: { used: (must(cfo) as unknown[]).length, limit: 2, items: must(cfo) },
     report: must(report) ?? { status: "not_started" },
   };
 });

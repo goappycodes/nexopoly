@@ -11,7 +11,6 @@ import { Viewer } from "./Viewer";
 import { AllNotes, NotesPanel, useNotes } from "./Notes";
 import { ReportBuilder } from "./Report";
 import { AskVishalDialog, VishalPanel } from "./Vishal";
-import { AccountsDesk } from "./Desk";
 import type { TeamState, View } from "./types";
 
 export default function TeamApp() {
@@ -194,7 +193,6 @@ export default function TeamApp() {
     { id: "inbox", icon: "inbox", label: "Inbox", badge: unread, active: view.kind === "drive" && view.folder === "Inbox", go: () => setView({ kind: "drive", folder: "Inbox" }) },
     { id: "notes", icon: "sticky_note_2", label: "All notes", badge: 0, active: view.kind === "notes", go: () => setView({ kind: "notes" }) },
     { id: "report", icon: "assignment", label: "Report", active: view.kind === "report", go: () => setView({ kind: "report" }) },
-    { id: "desk", icon: "support_agent", label: "Accounts desk", active: view.kind === "desk", go: () => setView({ kind: "desk" }) },
   ];
 
   return (
@@ -337,7 +335,6 @@ export default function TeamApp() {
           ))}
           <div className="mt-auto space-y-4 px-3 pt-6 text-xs text-ink2">
             <Meter label="Sessions with Vishal" used={data.vishal.used} total={data.vishal.limit} />
-            <Meter label="Questions to Accounts" used={data.cfo.used} total={data.cfo.limit} />
           </div>
         </nav>
 
@@ -417,10 +414,6 @@ export default function TeamApp() {
                 docs={citableDocs}
                 onSubmit={submitReport}
               />
-            </div>
-          ) : view.kind === "desk" ? (
-            <div className="flex-1 bg-[#F0F4F9]">
-              <AccountsDesk cfo={data.cfo} open={st.cfoOpen} onAsked={reload} />
             </div>
           ) : (
             <div className="flex-1">

@@ -8,13 +8,12 @@ export const dynamic = "force-dynamic";
 export const GET = handler(async () => {
   await requireAdmin();
   const e = await getEvent();
-  const [teams, stats, reports, scores, requests, cfo, used] = await Promise.all([
+  const [teams, stats, reports, scores, requests, used] = await Promise.all([
     db().from("teams").select("*").order("name"),
     db().from("team_stats").select("*"),
     db().from("reports").select("team_id,status,submitted_at,auto_submitted,updated_at"),
     db().from("team_scores").select("*"),
     db().from("expert_requests").select("*").order("position"),
-    db().from("cfo_questions").select("*").order("created_at", { ascending: false }),
     usedSessions(),
   ]);
   const byId = <T extends { team_id: string }>(rows: T[]) => new Map(rows.map((r) => [r.team_id, r]));
@@ -39,7 +38,6 @@ export const GET = handler(async () => {
       members: t.members,
       online: !!t.last_seen_at && Date.now() - Date.parse(t.last_seen_at) < 30_000,
       last_seen_at: t.last_seen_at,
-      cfo_used: t.cfo_used,
       vishal_used: used.get(t.id) ?? 0,
       vishal_limit: sessionLimit(t),
       stats: statMap.get(t.id) ?? null,
@@ -55,6 +53,5 @@ export const GET = handler(async () => {
       .slice(0, 12)
       .map((r) => ({ ...r, team_name: names.get(r.team_id)?.name, table_no: names.get(r.team_id)?.table_no })),
     avgSessionSec,
-    cfo: (must(cfo) as any[]).map((q) => ({ ...q, team_name: names.get(q.team_id)?.name })),
   };
 });

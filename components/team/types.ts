@@ -30,7 +30,6 @@ export interface TeamState {
     busy: boolean;
     history: { question: string; doc_ids: string[]; status: string; expert_note: string | null; created_at: string; ended_at: string | null }[];
   };
-  cfo: { used: number; limit: number; items: { id: string; question: string; answer: string; created_at: string }[] };
   report: { status: string; submitted_at?: string | null; auto_submitted?: boolean };
 }
 
@@ -39,5 +38,4 @@ export type View =
   | { kind: "doc"; docId: string; page?: number; from?: View }
   | { kind: "notes" }
   | { kind: "report" }
-  | { kind: "desk" }
   | { kind: "inbox" };

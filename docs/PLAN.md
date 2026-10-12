@@ -23,8 +23,8 @@ Nexopoly is the web app for the NEXIS School of Business finance hackathon on **
 
 | Role | Login | Device | Screens |
 |---|---|---|---|
-| Team | Team name + 6-character code (plus table number and member names on first sign-in) | One laptop per team | Drive, document viewer, notes, Ask Vishal, Accounts desk, Inbox, report builder, top bar with phase timer |
-| Admin | `ADMIN_PASSWORD` | Laptop | Event control, live teams, Vishal queue, Accounts desk overrides, grading and results, setup, exports |
+| Team | Team name + 6-character code (plus table number and member names on first sign-in) | One laptop per team | Drive, document viewer, notes, Ask Vishal, Inbox, report builder, top bar with phase timer |
+| Admin | `ADMIN_PASSWORD` | Laptop | Event control, live teams, Vishal queue, grading and results, setup, exports |
 | Display | `DISPLAY_PIN` | Projector | Phase and countdown, Vishal queue and session timer, announcements, inject alerts, pitch timer, answer reveal, leaderboard |
 
 A second login with the same team code ends the first session; the first device sees "Signed in on another device", and the second login is logged.
@@ -35,9 +35,7 @@ A second login with the same team code ends the first session; the first device 
 |---|---|---|
 | 0:00 | Open briefing | Teams see only "00 Read Me". 10-minute countdown. |
 | 0:10 | Start audit | All folders unlock. 55-minute timer. The findings table in the report opens. Vishal's queue opens automatically. |
-| 0:20 | Desk toggle on | Teams can send 2 written questions to the Accounts Manager. |
 | 0:35 | Push Inject 1 | Whistleblower email lands in every Inbox with a banner and chime. The projector shows "New message received". |
-| 1:00 | Desk toggle off | |
 | 1:05 | Open report | The full report opens with a 15-minute timer. |
 | 1:15 | Queue toggle off | |
 | 1:20 | Close submissions (also automatic when the report timer ends) | Reports lock. Unsubmitted drafts are auto-submitted and flagged. The Drive locks. |

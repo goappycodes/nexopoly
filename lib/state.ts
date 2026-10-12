@@ -11,7 +11,6 @@ export interface EventRow {
   paused: boolean;
   paused_remaining_ms: number | null;
   queue_open: boolean;
-  cfo_open: boolean;
   inject1_at: string | null;
   announcement: string | null;
   announcement_at: string | null;
@@ -28,7 +27,6 @@ export const toPublic = (e: EventRow): PublicState => ({
   paused: e.paused,
   pausedRemainingMs: e.paused_remaining_ms,
   queueOpen: e.queue_open,
-  cfoOpen: e.cfo_open,
   inject1At: e.inject1_at,
   announcement: e.announcement,
   announcementAt: e.announcement_at,
@@ -53,7 +51,7 @@ export async function tick() {
   const closed = must(
     await db()
       .from("event_state")
-      .update({ phase: "closed", phase_started_at: now, phase_ends_at: null, paused: false, cfo_open: false, queue_open: false, updated_at: now })
+      .update({ phase: "closed", phase_started_at: now, phase_ends_at: null, paused: false, queue_open: false, updated_at: now })
       .eq("id", 1)
       .eq("phase", "report")
       .eq("paused", false)
@@ -89,10 +87,8 @@ export async function setPhase(phase: Phase) {
   }
   if (phase === "report") {
     patch.phase_ends_at = inMinutes(15);
-    patch.cfo_open = false;
   }
   if (phase === "closed") {
-    patch.cfo_open = false;
     patch.queue_open = false;
   }
   if (phase === "pitches") {

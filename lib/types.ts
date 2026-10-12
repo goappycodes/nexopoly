@@ -36,7 +36,6 @@ export interface PublicState {
   paused: boolean;
   pausedRemainingMs: number | null;
   queueOpen: boolean;
-  cfoOpen: boolean;
   inject1At: string | null;
   announcement: string | null;
   announcementAt: string | null;
