@@ -56,42 +56,24 @@ export interface Finding {
   impactOn: ImpactOn | "";
 }
 
-export interface Adjustment {
-  description: string;
-  amount: number | null;
-  sign: "+" | "-";
-}
-
-export interface ClearedItem {
-  item: string;
-  docId: string;
-  reason: string;
-}
-
 export interface ReportData {
   summary: string;
   findings: Finding[];
-  adjustments: Adjustment[];
   cashLeakage: number | null;
   adjustedOcf: number | null;
-  cleared: ClearedItem[];
 }
 
 export const LIMITS = {
   summaryWords: 150,
   findingWords: 60,
   findings: 15,
-  adjustments: 8,
-  cleared: 5,
 };
 
 export const emptyReport = (): ReportData => ({
   summary: "",
   findings: [],
-  adjustments: [],
   cashLeakage: null,
   adjustedOcf: null,
-  cleared: [],
 });
 
 export const NOTE_TAGS = ["Error", "Leakage", "Misrepresentation"] as const;

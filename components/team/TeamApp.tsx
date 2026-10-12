@@ -410,7 +410,6 @@ export default function TeamApp() {
                 savedAt={savedAt}
                 saving={saving}
                 team={data.team}
-                claimedPbt={data.claimedPbt}
                 docs={citableDocs}
                 onSubmit={submitReport}
               />

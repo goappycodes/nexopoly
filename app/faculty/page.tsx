@@ -261,9 +261,8 @@ function Anomalies({ data, docs, onOpenDoc }: { data: FacultyData; docs: Map<str
           {k.issues.length} planted issues worth {totalPoints} raw points, and {k.red_herrings.length} red herrings. Click a Doc ID to open it; ★ marks the strongest evidence.
         </p>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
+        <div className="mt-6 grid gap-3 md:grid-cols-2">
           {[
-            ["Profit before tax", k.claimed.pbt, r.pbt, `accepted ${inr(r.pbt_accept_min)} to ${inr(r.pbt_accept_max)}`],
             ["Operating cash flow", k.claimed.operating_cash_flow, r.operating_cash_flow, `± ${inr(r.ocf_tolerance)}`],
             ["Cash leakage", null, r.cash_leakage, `± ${r.cash_leakage_tolerance_pct}%`],
           ].map(([label, a, b, tol]) => (

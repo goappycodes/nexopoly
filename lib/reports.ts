@@ -31,18 +31,8 @@ export function sanitize(input: any): ReportData {
       impactOn: pick(f?.impactOn, ["Profit", "Cash", "Balance sheet", "Not quantified"] as const),
     }),
   );
-  r.adjustments = (Array.isArray(input?.adjustments) ? input.adjustments : []).slice(0, LIMITS.adjustments).map((a: any) => ({
-    description: String(a?.description ?? "").slice(0, 160),
-    amount: num(a?.amount),
-    sign: a?.sign === "+" ? "+" : "-",
-  }));
   r.cashLeakage = num(input?.cashLeakage);
   r.adjustedOcf = num(input?.adjustedOcf);
-  r.cleared = (Array.isArray(input?.cleared) ? input.cleared : []).slice(0, LIMITS.cleared).map((c: any) => ({
-    item: String(c?.item ?? "").slice(0, 160),
-    docId: ids.has(c?.docId) ? c.docId : "",
-    reason: clampWords(c?.reason, 40),
-  }));
   return r;
 }
 
@@ -53,8 +43,6 @@ export function mergeForPhase(stored: ReportData, incoming: ReportData, phase: P
   return stored;
 }
 
-export const restatedPbt = (r: ReportData) =>
-  CASE_PUBLIC.claimed_pbt + r.adjustments.reduce((s, a) => s + (a.amount ?? 0) * (a.sign === "+" ? 1 : -1), 0);
 
 export async function loadReport(teamId: string) {
   const row = must(await db().from("reports").select("*").eq("team_id", teamId).maybeSingle());
@@ -194,16 +182,9 @@ export async function buildReportPdf(team: any, r: ReportData, submittedAt: stri
     text(`${f.type || "-"}  |  ${f.status || "-"}  |  Impact ${inr(f.impact)} on ${f.impactOn || "-"}  |  Evidence: ${f.evidence.join(", ") || "-"}`, { size: 8.5, indent: 12, color: rgb(0.35, 0.35, 0.35), gap: 1 });
     text(f.description, { indent: 12, gap: 6 });
   });
-  heading("4. Restated profit before tax");
-  text(`Management's profit before tax: ${inr(CASE_PUBLIC.claimed_pbt)}`);
-  r.adjustments.forEach((a) => text(`${a.sign} ${inr(a.amount)}   ${a.description}`, { indent: 12, gap: 1 }));
-  text(`Restated profit before tax: ${inr(restatedPbt(r))}`, { f: bold, gap: 6 });
-  heading("5. Cash");
+  heading("4. Cash");
   text(`Total cash leakage found: ${inr(r.cashLeakage)}`, { gap: 1 });
-  text(`Operating cash flow after adjustments: ${inr(r.adjustedOcf)}`);
-  heading("6. Items examined and cleared");
-  if (!r.cleared.length) text("-");
-  r.cleared.forEach((c) => text(`${c.item} (${c.docId || "-"}): ${c.reason}`, { gap: 3 }));
+  text(`Operating cash flow as the team believes it really is: ${inr(r.adjustedOcf)}`);
   return Buffer.from(await doc.save());
 }
 

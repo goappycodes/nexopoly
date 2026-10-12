@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { LIMITS, wordCount, type Adjustment, type ClearedItem, type Finding, type ManifestDoc, type Phase, type ReportData } from "@/lib/types";
-import { Button, Dialog, Icon, IconButton, inr } from "../ui";
+import { LIMITS, wordCount, type Finding, type ManifestDoc, type Phase, type ReportData } from "@/lib/types";
+import { Button, Dialog, Icon, IconButton } from "../ui";
 import { noPaste } from "./lockdown";
 
 const field = "w-full rounded-md border-0 border-b border-outline bg-[#F8FAFD] px-3 py-2 text-sm text-ink outline-none transition focus:border-b-2 focus:border-primary disabled:text-ink2";
@@ -143,7 +143,6 @@ export function ReportBuilder({
   savedAt,
   saving,
   team,
-  claimedPbt,
   docs,
   onSubmit,
 }: {
@@ -156,7 +155,6 @@ export function ReportBuilder({
   savedAt: string | null;
   saving: boolean;
   team: { name: string; members: string[] };
-  claimedPbt: number;
   docs: ManifestDoc[];
   onSubmit: () => Promise<void>;
 }) {
@@ -168,9 +166,6 @@ export function ReportBuilder({
   const restLock = submitted ? null : phase === "audit" ? "Opens when the report phase starts (at 1:05)." : phase === "report" ? null : "The report is locked.";
   const R = (patch: Partial<ReportData>) => setReport((r) => ({ ...r, ...patch }));
   const setFinding = (i: number, patch: Partial<Finding>) => setReport((r) => ({ ...r, findings: r.findings.map((f, j) => (j === i ? { ...f, ...patch } : f)) }));
-  const setAdj = (i: number, patch: Partial<Adjustment>) => setReport((r) => ({ ...r, adjustments: r.adjustments.map((f, j) => (j === i ? { ...f, ...patch } : f)) }));
-  const setCleared = (i: number, patch: Partial<ClearedItem>) => setReport((r) => ({ ...r, cleared: r.cleared.map((f, j) => (j === i ? { ...f, ...patch } : f)) }));
-  const restated = claimedPbt + report.adjustments.reduce((s, a) => s + (a.amount ?? 0) * (a.sign === "+" ? 1 : -1), 0);
 
   const missing = [
     report.cashLeakage === null && "Total cash leakage",
@@ -266,68 +261,17 @@ export function ReportBuilder({
           </div>
         </Section>
 
-        <Section n={4} title="Restated profit before tax" hint="Start from management's figure and adjust. The restated figure is calculated for you." locked={restLock}>
-          <div className="mb-3 flex items-center justify-between rounded-lg bg-tint px-4 py-2 text-sm">
-            <span className="text-ink2">Management&apos;s profit before tax</span>
-            <span className="font-mono font-medium">{inr(claimedPbt)}</span>
-          </div>
-          <div className="space-y-2">
-            {report.adjustments.map((a, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <select {...noPaste} disabled={!restOpen} value={a.sign} onChange={(e) => setAdj(i, { sign: e.target.value as "+" | "-" })} className={`${field} !w-20`}>
-                  <option value="-">−</option>
-                  <option value="+">+</option>
-                </select>
-                <input {...noPaste} disabled={!restOpen} value={a.description} onChange={(e) => setAdj(i, { description: e.target.value.slice(0, 160) })} placeholder="Adjustment" className={field} />
-                <div className="w-48 shrink-0">
-                  <NumberInput value={a.amount} onChange={(v) => setAdj(i, { amount: v === null ? null : Math.abs(v) })} disabled={!restOpen} />
-                </div>
-                {restOpen && <IconButton icon="close" title="Remove" onClick={() => setReport((r) => ({ ...r, adjustments: r.adjustments.filter((_, j) => j !== i) }))} />}
-              </div>
-            ))}
-          </div>
-          {restOpen && report.adjustments.length < LIMITS.adjustments && (
-            <Button variant="text" className="mt-2" onClick={() => setReport((r) => ({ ...r, adjustments: [...r.adjustments, { description: "", amount: null, sign: "-" }] }))}>
-              <Icon name="add" size={18} /> Add adjustment
-            </Button>
-          )}
-          <div className={`mt-3 flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium ${restated < 0 ? "bg-[#FCE8E6] text-danger" : "bg-[#E6F4EA] text-success"}`}>
-            <span>Restated profit before tax</span>
-            <span className="font-mono">{inr(restated)}</span>
-          </div>
-        </Section>
-
-        <Section n={5} title="Cash" hint="Required." locked={restLock}>
+        <Section n={4} title="Cash" hint="Required." locked={restLock}>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <div className="mb-1 text-xs text-ink2">Total cash leakage found</div>
               <NumberInput value={report.cashLeakage} onChange={(v) => R({ cashLeakage: v })} disabled={!restOpen} />
             </div>
             <div>
-              <div className="mb-1 text-xs text-ink2">Operating cash flow after adjustments</div>
+              <div className="mb-1 text-xs text-ink2">Operating cash flow as you believe it really is</div>
               <NumberInput value={report.adjustedOcf} onChange={(v) => R({ adjustedOcf: v })} disabled={!restOpen} />
             </div>
           </div>
-        </Section>
-
-        <Section n={6} title="Items examined and cleared" hint="Things that looked suspicious but you judged legitimate, with the Doc ID and your reason." locked={restLock}>
-          <div className="space-y-3">
-            {report.cleared.map((c, i) => (
-              <div key={i} className="grid gap-2 rounded-lg border border-line p-3 md:grid-cols-[1fr_180px_auto]">
-                <input {...noPaste} disabled={!restOpen} value={c.item} onChange={(e) => setCleared(i, { item: e.target.value.slice(0, 160) })} placeholder="Item" className={field} />
-                <DocPicker value={c.docId ? [c.docId] : []} onChange={(v) => setCleared(i, { docId: v[0] ?? "" })} docs={docs} disabled={!restOpen} multiple={false} />
-                {restOpen ? <IconButton icon="close" title="Remove" onClick={() => setReport((r) => ({ ...r, cleared: r.cleared.filter((_, j) => j !== i) }))} /> : <span />}
-                <div className="md:col-span-3">
-                  <LimitedText value={c.reason} onChange={(v) => setCleared(i, { reason: v })} max={40} rows={2} disabled={!restOpen} placeholder="Why it is fine" />
-                </div>
-              </div>
-            ))}
-          </div>
-          {restOpen && report.cleared.length < LIMITS.cleared && (
-            <Button variant="text" className="mt-2" onClick={() => setReport((r) => ({ ...r, cleared: [...r.cleared, { item: "", docId: "", reason: "" }] }))}>
-              <Icon name="add" size={18} /> Add item
-            </Button>
-          )}
         </Section>
 
         {restOpen && (

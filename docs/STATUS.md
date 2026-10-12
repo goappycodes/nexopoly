@@ -12,7 +12,7 @@ Last updated: 12 October 2026 (night before the event). Plan and decisions: [PLA
 | Server watermark burned into every page, 60-second signed image URLs | Done, smoke-tested | `app/api/team/page`, `app/api/img`, `lib/images.tsx` |
 | Copy, print, shortcut, right-click and drag blocking | Done | `components/team/lockdown.ts` |
 | Pinned notes (numbered markers), notes panel, All notes view with folder/tag filters, tags, Proven/Needs verification, Promote to finding | Done | `components/team/Notes.tsx` |
-| Report builder: fixed 6-section form (team, summary, findings, restated PBT, cash, items cleared), word limits, Doc ID pickers, restated PBT calculator, paste blocked, 10-second autosave, findings-only during the audit, submit-once | Done, smoke-tested | `components/team/Report.tsx`, `app/api/team/report` |
+| Report builder: fixed 4-section form (team, summary, findings, cash), word limits, Doc ID pickers, paste blocked, 10-second autosave, findings-only during the audit, submit-once | Done, smoke-tested | `components/team/Report.tsx`, `app/api/team/report` |
 | Auto-submit at the end of the report phase; PDF and JSON stored | Done, smoke-tested | `lib/reports.ts`, `lib/state.ts` |
 | Ask Vishal: question gate, one open request (enforced by the database), cancel, position and wait, live 2-minute countdown, Time up | Done, smoke-tested | `components/team/Vishal.tsx`, `app/api/team/vishal` |
 | Inject 1 (pre-rendered whistleblower email); Inbox banner and chime. Inject 2 was removed on 12 Oct | Done, smoke-tested | `app/api/team/state` |
