@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: #f8fafd;
+  color: #1f1f1f;
+  font-family: var(--font-roboto), Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.msi {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-feature-settings: "liga";
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  user-select: none;
+}
+.msi.fill {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* Team side: no text selection or dragging outside form fields. */
+.lockdown,
+.lockdown * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.lockdown input,
+.lockdown textarea,
+.lockdown [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: #c4c7c5;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.ripple {
+  transition: background-color 120ms ease;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.anim-in {
+  animation: slideDown 220ms ease-out;
+}
+@keyframes pulseRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(11, 87, 208, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 18px rgba(11, 87, 208, 0);
+  }
+}
+.pulse {
+  animation: pulseRing 1.4s ease-out infinite;
+}
+
+/* Printing is blocked on team screens. */
+@media print {
+  body.no-print * {
+    display: none !important;
+  }
+  body.no-print::after {
+    content: "Printing disabled";
+    display: block;
+    font: 600 32px/1.4 Roboto, Arial, sans-serif;
+    padding: 80px;
+    text-align: center;
+  }
+}
