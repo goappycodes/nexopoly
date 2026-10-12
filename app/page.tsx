@@ -48,11 +48,7 @@ export default function TeamLogin() {
           </div>
           <p className="text-xs text-ink2">Table number and names are needed on your first sign-in only.</p>
           {error && <p className="rounded-lg bg-[#FCE8E6] px-4 py-3 text-sm text-danger">{error}</p>}
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex gap-4 text-xs text-ink2">
-              <a href="/admin" className="hover:text-primary">Admin</a>
-              <a href="/display" className="hover:text-primary">Projector</a>
-            </div>
+          <div className="flex items-center justify-end pt-2">
             <Button type="submit" disabled={busy || !name || code.length < 6}>
               {busy ? "Signing in…" : "Next"}
             </Button>
