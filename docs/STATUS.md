@@ -81,9 +81,9 @@ Pipeline: see `case/README.md`. After regenerating, run `npm run case:upload` (p
 
 ## Event-day checklist
 
-1. Admin → Setup: create the teams (each gets 1 Vishal session; add more per team from Live teams if needed), print the login cards.
-2. Open `/display` on the projector, full screen (F11), and sign in with the display PIN.
-3. Admin → Setup → Reset event after any dry run.
+1. Admin → Setup → Reset event after any dry run. This deletes the teams too, so do it before creating the real teams.
+2. Admin → Setup: create the teams (each gets 1 Vishal session; add more per team from Live teams if needed), print the login cards.
+3. Open `/display` on the projector, full screen (F11), and sign in with the display PIN.
 4. Run the event from Admin → Event control, top to bottom.
 5. After close: Grading → Grade all → review flagged reports and the top 3 → enter Vishal marks (/30) and pitch marks (/20) → Publish leaderboard → Show results.
 6. Exports: download the PDFs zip and the scores CSV.

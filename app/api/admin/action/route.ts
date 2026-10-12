@@ -63,7 +63,8 @@ export const POST = handler(async (req: Request) => {
         must(await db().from(t).delete().not("team_id", "is", null));
       }
       must(await db().from("activity_log").delete().gte("id", 0));
-      must(await db().from("teams").update({ active_session_id: null, cfo_used: 0, vishal_extra: 0, table_no: null, members: [] }).not("id", "is", null));
+      must(await db().from("teams").delete().not("id", "is", null));
+      await ping("teams");
       await updateEvent({
         phase: "lobby", phase_started_at: null, phase_ends_at: null, paused: false, paused_remaining_ms: null, queue_open: false,
         inject1_at: null, announcement: null, announcement_at: null, pitch_order: [], pitch_index: 0,

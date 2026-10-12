@@ -679,7 +679,7 @@ function Setup({ e, data, act }: { e: any; data: any; act: Act }) {
       </div>
 
       <div className="rounded-2xl border border-[#F2B8B5] p-5">
-        <H sub="For after a dry run. Deletes every note, request, question, report, grade and log, and returns the event to the start. Teams and codes are kept.">Reset event</H>
+        <H sub="For after a dry run. Deletes every team and its code, plus every note, request, report, grade and log, and returns the event to the start. Create the teams again and print new login cards afterwards.">Reset event</H>
         <div className="flex gap-2">
           <input value={confirm} onChange={(x) => setConfirm(x.target.value)} placeholder="Type RESET" className="h-10 w-40 rounded-full border border-outline px-4 text-sm" />
           <Button variant="danger" disabled={confirm !== "RESET"} onClick={() => act("reset_event", { confirm }, "Event reset").then(() => setConfirm(""))}>
