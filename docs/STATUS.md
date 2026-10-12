@@ -48,6 +48,7 @@ SUPABASE_PROJECT_REF=
 SESSION_SECRET=              # long random string
 ADMIN_PASSWORD=
 DISPLAY_PIN=
+FACULTY_PASSWORD=            # for /faculty
 ANTHROPIC_API_KEY=           # for AI grading
 ```
 
@@ -76,6 +77,7 @@ Pipeline: see `case/README.md`. After regenerating, run `npm run case:upload` (p
 - Teams: `/`
 - Admin: `/admin` (login cards at `/admin/cards`)
 - Projector: `/display`
+- Faculty review: `/faculty` (password `FACULTY_PASSWORD`; admins can open it too). Shows every document page, each planted anomaly and red herring with its evidence, the restated numbers, and a feedback box on each. Feedback is stored as JSON in the private `secure` bucket under `faculty-feedback/`; "All feedback" lists it with a Copy all button.
 
 ## Event-day checklist
 

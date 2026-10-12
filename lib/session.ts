@@ -7,7 +7,7 @@ import { db } from "./db";
 const COOKIE = "nexo_session";
 const secret = () => new TextEncoder().encode(process.env.SESSION_SECRET!);
 
-export type Role = "team" | "admin" | "display";
+export type Role = "team" | "admin" | "display" | "faculty";
 export interface Session {
   role: Role;
   teamId?: string;
@@ -63,6 +63,13 @@ export async function requireAdmin() {
 export async function requireDisplay() {
   const s = await readSession();
   if (s?.role !== "display" && s?.role !== "admin") throw new HttpError(401, "Display sign-in required");
+  return s;
+}
+
+/** Faculty reviewers see every document and the answer key. Admins can open the same page. */
+export async function requireFaculty() {
+  const s = await readSession();
+  if (s?.role !== "faculty" && s?.role !== "admin") throw new HttpError(401, "Faculty sign-in required");
   return s;
 }
 
