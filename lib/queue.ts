@@ -1,6 +1,5 @@
 import "server-only";
 import { db, must } from "./db";
-import type { EventRow } from "./state";
 
 export interface RequestRow {
   id: string;
@@ -34,7 +33,9 @@ export async function usedSessions(teamId?: string): Promise<Map<string, number>
   return m;
 }
 
-export const sessionLimit = (e: EventRow, team: { vishal_extra: number }) => e.vishal_sessions_per_team + (team.vishal_extra ?? 0);
+/** Every team gets one session with Vishal; the admin can grant extras per team. */
+export const SESSIONS_PER_TEAM = 1;
+export const sessionLimit = (team: { vishal_extra: number }) => SESSIONS_PER_TEAM + (team.vishal_extra ?? 0);
 
 export async function nextPosition() {
   const rows = must(await db().from("expert_requests").select("position").order("position", { ascending: false }).limit(1)) as { position: number }[];

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { readSession, verify } from "@/lib/session";
 import { db } from "@/lib/db";
-import { loadPage, renderInject2, watermarked } from "@/lib/images";
-import { getEvent } from "@/lib/state";
+import { loadPage, watermarked } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -21,13 +20,7 @@ export async function GET(req: Request) {
   if (!team || team.active_session_id !== claims.s) return deny(409, "Session replaced");
 
   try {
-    let src: Buffer;
-    if (claims.d === "INJ-02") {
-      const e = await getEvent();
-      src = await renderInject2(e.inject2_deadline);
-    } else {
-      src = await loadPage(claims.d, claims.p);
-    }
+    const src = await loadPage(claims.d, claims.p);
     const out = await watermarked(src, team);
     return new NextResponse(new Uint8Array(out), {
       headers: {

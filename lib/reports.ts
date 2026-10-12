@@ -44,7 +44,6 @@ export function sanitize(input: any): ReportData {
     docId: ids.has(c?.docId) ? c.docId : "",
     reason: clampWords(c?.reason, 40),
   }));
-  r.inject2Response = clampWords(input?.inject2Response, LIMITS.inject2Words);
   const conds = Array.isArray(input?.conditions) ? input.conditions : [];
   r.conditions = [0, 1, 2].map((i) => clampWords(conds[i], LIMITS.conditionWords));
   return r;
@@ -210,9 +209,7 @@ export async function buildReportPdf(team: any, r: ReportData, submittedAt: stri
   heading("7. Items examined and cleared");
   if (!r.cleared.length) text("-");
   r.cleared.forEach((c) => text(`${c.item} (${c.docId || "-"}): ${c.reason}`, { gap: 3 }));
-  heading("8. Response to the MD's offer");
-  text(r.inject2Response);
-  heading("9. Conditions, or what would change our mind");
+  heading("8. Conditions, or what would change our mind");
   r.conditions.forEach((c, i) => text(`${i + 1}. ${c || "-"}`, { gap: 3 }));
 
   return Buffer.from(await doc.save());

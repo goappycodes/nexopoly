@@ -43,8 +43,8 @@ export const GET = handler(async () => {
   if (e.leaderboard_published) {
     const scores = must(await db().from("team_scores").select("*")) as any[];
     leaderboard = scores
-      .map((s) => ({ team: t.get(s.team_id)?.name ?? "?", table: t.get(s.team_id)?.table_no, ai: Number(s.final_ai ?? s.ai_total ?? 0), pitch: Number(s.pitch_marks ?? 0) }))
-      .map((r) => ({ ...r, total: Math.round((r.ai + r.pitch) * 10) / 10 }))
+      .map((s) => ({ team: t.get(s.team_id)?.name ?? "?", table: t.get(s.team_id)?.table_no, ai: Number(s.final_ai ?? s.ai_total ?? 0), vishal: Number(s.vishal_marks ?? 0), pitch: Number(s.pitch_marks ?? 0) }))
+      .map((r) => ({ ...r, total: Math.round((r.ai + r.vishal + r.pitch) * 10) / 10 }))
       .sort((a, b) => b.total - a.total);
   }
 

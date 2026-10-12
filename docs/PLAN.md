@@ -34,12 +34,11 @@ A second login with the same team code ends the first session; the first device 
 | Clock | Admin action | What happens |
 |---|---|---|
 | 0:00 | Open briefing | Teams see only "00 Read Me". 10-minute countdown. |
-| 0:10 | Start audit | All folders unlock. 55-minute timer. The findings table in the report opens. |
-| 0:15 | Queue toggle on | Teams can Ask Vishal. |
+| 0:10 | Start audit | All folders unlock. 55-minute timer. The findings table in the report opens. Vishal's queue opens automatically. |
 | 0:20 | Desk toggle on | Teams can send 2 written questions to the Accounts Manager. |
 | 0:35 | Push Inject 1 | Whistleblower email lands in every Inbox with a banner and chime. The projector shows "New message received". |
 | 1:00 | Desk toggle off | |
-| 1:05 | Inject 2 + open report | The MD's WhatsApp lands, with a deadline set to the real clock time 20 minutes later. The full report opens with a 15-minute timer. |
+| 1:05 | Open report | The full report opens with a 15-minute timer. |
 | 1:15 | Queue toggle off | |
 | 1:20 | Close submissions (also automatic when the report timer ends) | Reports lock. Unsubmitted drafts are auto-submitted and flagged. The Drive locks. |
 | 1:20–1:45 | Start pitches | Projector shows the pitch order and a 2-minute timer that turns red at 15 seconds. |
@@ -61,7 +60,7 @@ The admin can pause, resume, or extend any timed phase by 5 minutes. Every timer
 | 06 Petty Cash | PC-01, PC-02 (scanned vouchers) |
 | 07 Inventory | STK-01 |
 | 08 Company | CO-01, CO-02 |
-| Inbox | INJ-01 (pre-rendered), INJ-02 (rendered at runtime with the live deadline) |
+| Inbox | INJ-01 (pre-rendered) |
 
 Pipeline (in `case/`, local only): case-data model → validation of every reconciliation rule → HTML templates → Playwright renders each page to a 150 dpi PNG with a faint CONFIDENTIAL mark → `npm run case:upload` pushes the pages and the answer key to private Supabase storage, and copies `manifest.json` and `public.json` (titles and claimed PBT only) into `data/`.
 
@@ -73,10 +72,10 @@ Pipeline (in `case/`, local only): case-data model → validation of every recon
 | 2 | Authenticated serving | `/api/team/page` issues a 60-second signed token. `/api/img` checks that token **and** the team's live session cookie. A copied URL fails in another browser. |
 | 3 | Watermark | The server burns team name, code and time into every page (satori + sharp). The client also tiles a live team · code · seconds overlay at 8% opacity. |
 | 4 | Input blocking | Selection, right-click, drag and Ctrl/Cmd + C, A, X, S, P, U are blocked outside form fields, and each attempt is logged. Print CSS shows "Printing disabled". |
-| 5 | Focus blur | Window blur or a hidden tab blurs the document and shows "Return to the app". Each event is logged. |
+| 5 | Focus blur | Removed on 12 Oct: switching windows no longer blurs or logs anything. |
 | 6 | Paste blocking | Paste and drop are blocked in every report field. Notes accept a paste only of text copied from the team's own notes. |
 | 7 | No downloads | No download or share action anywhere on the team side. |
-| 8 | Activity log | Logs file open/close (with time spent), focus losses, blocked shortcuts, paste attempts, devtools shortcuts and second logins. Admin sees live counts, with a red flag at or above the threshold (default 10). |
+| 8 | Activity log | Logs file open/close (with time spent), blocked shortcuts, paste attempts, devtools shortcuts and second logins. Admin sees live counts; second logins show in red. |
 | 9 | DevTools deterrent | Only the F12 and Ctrl+Shift+I/J/C shortcuts are blocked and logged. Size-based devtools detection was left out because it gives false positives on scaled Windows displays. |
 
 ## 6. Architecture
@@ -96,4 +95,4 @@ Pipeline (in `case/`, local only): case-data model → validation of every recon
 
 ## 8. Scoring (from the brief)
 
-AI grades 85 marks: Findings 40, Quantification 20, Recommendation 25. The jury adds Pitch out of 15. Red herrings cost −5 each when called fraud. The grader prompt is in `lib/grading.ts`.
+Total 100. AI grades the report out of 50: Findings 25, Quantification 10, Recommendation 15. The admin enters Vishal questions out of 30 (quality of the questions the team asked) and Pitch out of 20. Red herrings cost −5 each when called fraud. The grader prompt is in `lib/grading.ts`.

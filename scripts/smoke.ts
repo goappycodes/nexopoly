@@ -132,12 +132,10 @@ const check = (name: string, ok: boolean, extra?: unknown) => {
   else console.log("SKIP  inject 1 (no case documents uploaded yet)");
   await act("phase", { phase: "report" });
   s = (await team.call("/api/team/state")).data;
-  check("report phase pushes inject 2", s.inbox.some((i: any) => i.docId === "INJ-02"), s.inbox);
-  const inj = await team.call(`/api/team/page?doc=INJ-02&p=1`);
-  const injImg = await team.call(inj.data.url);
-  check("inject 2 renders", injImg.status === 200 && injImg.type.includes("image"), injImg.status);
+  check("report phase pushes no second inject", !s.inbox.some((i: any) => i.docId === "INJ-02"), s.inbox);
+  check("INJ-02 not served", (await team.call(`/api/team/page?doc=INJ-02&p=1`)).status === 404);
 
-  check("report phase: full save", (await team.call("/api/team/report", "PUT", { data: { ...draft, summary: "Smoke test summary.", recommendation: "Invest with conditions", inject2Response: "Smoke test response." } })).status === 200);
+  check("report phase: full save", (await team.call("/api/team/report", "PUT", { data: { ...draft, summary: "Smoke test summary.", recommendation: "Invest with conditions" } })).status === 200);
   check("submit", (await team.call("/api/team/report/submit", "POST", {})).status === 200);
   check("no edits after submit", (await team.call("/api/team/report", "PUT", { data: draft })).status === 403);
   rep = (await team.call("/api/team/report")).data;

@@ -145,7 +145,6 @@ export function ReportBuilder({
   team,
   claimedPbt,
   docs,
-  inject2Delivered,
   onSubmit,
 }: {
   report: ReportData;
@@ -159,7 +158,6 @@ export function ReportBuilder({
   team: { name: string; members: string[] };
   claimedPbt: number;
   docs: ManifestDoc[];
-  inject2Delivered: boolean;
   onSubmit: () => Promise<void>;
 }) {
   const [confirm, setConfirm] = useState(false);
@@ -176,7 +174,6 @@ export function ReportBuilder({
 
   const missing = [
     !report.recommendation && "Recommendation",
-    !report.inject2Response.trim() && "Response to the MD's offer",
     report.cashLeakage === null && "Total cash leakage",
     report.findings.some((f) => f.evidence.length === 0) && "Evidence on every finding",
   ].filter(Boolean) as string[];
@@ -345,11 +342,7 @@ export function ReportBuilder({
           )}
         </Section>
 
-        <Section n={8} title="Response to the MD's offer (Inject 2)" hint="Required. 80 words." locked={restLock ?? (!inject2Delivered ? "Opens when the MD's message arrives in your Inbox." : null)}>
-          <LimitedText value={report.inject2Response} onChange={(v) => R({ inject2Response: v })} max={LIMITS.inject2Words} rows={4} disabled={!restOpen} />
-        </Section>
-
-        <Section n={9} title="Conditions, or what would change our mind" hint="Three rows, 40 words each." locked={restLock}>
+        <Section n={8} title="Conditions, or what would change our mind" hint="Three rows, 40 words each." locked={restLock}>
           <div className="space-y-3">
             {[0, 1, 2].map((i) => (
               <LimitedText

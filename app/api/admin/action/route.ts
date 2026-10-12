@@ -57,13 +57,6 @@ export const POST = handler(async (req: Request) => {
       must(await db().from("teams").update({ active_session_id: null }).eq("id", b.teamId));
       return { ok: true };
     }
-    case "config": {
-      const patch: Record<string, number> = {};
-      if ([1, 2, 3].includes(Number(b.vishal_sessions_per_team))) patch.vishal_sessions_per_team = Number(b.vishal_sessions_per_team);
-      if (Number(b.focus_threshold) > 0) patch.focus_threshold = Number(b.focus_threshold);
-      await updateEvent(patch as any);
-      return { ok: true };
-    }
     case "reset_event": {
       if (b.confirm !== "RESET") throw new HttpError(400, "Type RESET to confirm.");
       for (const t of ["grades", "team_scores", "reports", "inbox_reads", "cfo_questions", "expert_requests", "notes"]) {
@@ -73,7 +66,7 @@ export const POST = handler(async (req: Request) => {
       must(await db().from("teams").update({ active_session_id: null, cfo_used: 0, vishal_extra: 0, table_no: null, members: [] }).not("id", "is", null));
       await updateEvent({
         phase: "lobby", phase_started_at: null, phase_ends_at: null, paused: false, paused_remaining_ms: null, queue_open: false, cfo_open: false,
-        inject1_at: null, inject2_at: null, inject2_deadline: null, announcement: null, announcement_at: null, pitch_order: [], pitch_index: 0,
+        inject1_at: null, announcement: null, announcement_at: null, pitch_order: [], pitch_index: 0,
         pitch_ends_at: null, pitch_paused_remaining_ms: null, leaderboard_published: false,
       });
       await db().storage.from("reports").list().then(async ({ data }) => {
@@ -96,11 +89,6 @@ export const POST = handler(async (req: Request) => {
     case "inject1": {
       const e = await getEvent();
       if (!e.inject1_at) await updateEvent({ inject1_at: now });
-      return { ok: true };
-    }
-    case "inject2": {
-      const e = await getEvent();
-      if (!e.inject2_at) await updateEvent({ inject2_at: now, inject2_deadline: new Date(Date.now() + 20 * 60_000).toISOString() });
       return { ok: true };
     }
     case "toggle": {
@@ -231,7 +219,7 @@ export const POST = handler(async (req: Request) => {
       const patch: Record<string, unknown> = { team_id: b.teamId, accepted: true, updated_at: now };
       if (b.final_ai !== undefined && b.final_ai !== null && b.final_ai !== "") {
         const v = Number(b.final_ai);
-        if (!Number.isFinite(v) || v < 0 || v > 85) throw new HttpError(400, "AI marks must be 0–85.");
+        if (!Number.isFinite(v) || v < 0 || v > 50) throw new HttpError(400, "Report marks must be 0–50.");
         if (!String(b.reason ?? "").trim()) throw new HttpError(400, "Give a reason for the edit.");
         patch.final_ai = v;
         patch.edit_reason = String(b.reason).slice(0, 300);
@@ -242,8 +230,15 @@ export const POST = handler(async (req: Request) => {
     }
     case "pitch_marks": {
       const v = Number(b.marks);
-      if (!Number.isFinite(v) || v < 0 || v > 15) throw new HttpError(400, "Pitch marks must be 0–15.");
+      if (!Number.isFinite(v) || v < 0 || v > 20) throw new HttpError(400, "Pitch marks must be 0–20.");
       must(await db().from("team_scores").upsert({ team_id: b.teamId, pitch_marks: v, updated_at: now }));
+      await ping("grades");
+      return { ok: true };
+    }
+    case "vishal_marks": {
+      const v = Number(b.marks);
+      if (!Number.isFinite(v) || v < 0 || v > 30) throw new HttpError(400, "Vishal marks must be 0–30.");
+      must(await db().from("team_scores").upsert({ team_id: b.teamId, vishal_marks: v, updated_at: now }));
       await ping("grades");
       return { ok: true };
     }

@@ -11,7 +11,7 @@ interface DisplayData {
   current: { team: string; table: string; endsAt: string } | null;
   justEnded: { team: string; table: string; endedAt: string } | null;
   pitch: null | { index: number; total: number; current: { name: string; table_no: string | null } | null; next: { name: string; table_no: string | null } | null; endsAt: string | null; order: string[] };
-  leaderboard: null | { team: string; table: string | null; ai: number; pitch: number; total: number }[];
+  leaderboard: null | { team: string; table: string | null; ai: number; vishal: number; pitch: number; total: number }[];
   reveal: null | {
     claimed: { pbt: number; pat: number; operating_cash_flow: number };
     restated: { pbt: number; cash_leakage: number; operating_cash_flow: number };
@@ -73,17 +73,17 @@ function Screen({ d }: { d: DisplayData }) {
   const st = d.state;
   const rem = remainingMs(st, now);
   const [flash, setFlash] = useState<string | null>(null);
-  const seen = useRef<{ i1: string | null; i2: string | null } | null>(null);
+  const seen = useRef<{ i1: string | null } | null>(null);
 
-  // "New message received" flash on each inject, without content.
+  // "New message received" flash when the inject lands, without content.
   useEffect(() => {
-    if (seen.current && ((st.inject1At && st.inject1At !== seen.current.i1) || (st.inject2At && st.inject2At !== seen.current.i2))) {
+    if (seen.current && st.inject1At && st.inject1At !== seen.current.i1) {
       setFlash("New message received");
       chime();
       setTimeout(() => setFlash(null), 12_000);
     }
-    seen.current = { i1: st.inject1At, i2: st.inject2At };
-  }, [st.inject1At, st.inject2At]);
+    seen.current = { i1: st.inject1At };
+  }, [st.inject1At]);
 
   const clock = new Date(serverNow()).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: true });
 
@@ -307,7 +307,7 @@ function Leaderboard({ rows }: { rows: DisplayData["leaderboard"] }) {
             <div className="flex-1">
               <div className="font-display text-6xl">{r.team}</div>
               <div className="mt-1 text-2xl text-[#C4C7C5]">
-                AI {r.ai} · Pitch {r.pitch}
+                Report {r.ai} · Vishal {r.vishal} · Pitch {r.pitch}
               </div>
             </div>
             <span className="font-mono text-7xl">{r.total}</span>

@@ -3,7 +3,7 @@ import { handler, requireTeam } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED = new Set(["file_open", "file_close", "focus_loss", "blocked_shortcut", "paste_blocked", "context_menu", "devtools", "print_attempt"]);
+const ALLOWED = new Set(["file_open", "file_close", "blocked_shortcut", "paste_blocked", "context_menu", "devtools", "print_attempt"]);
 
 export const POST = handler(async (req: Request) => {
   const team = await requireTeam();
@@ -17,6 +17,6 @@ export const POST = handler(async (req: Request) => {
     ...(typeof d.page === "number" ? { page: d.page } : {}),
   };
   await logActivity(team.id, type, typeof b.docId === "string" ? b.docId.slice(0, 20) : null, detail);
-  if (type === "focus_loss" || type === "devtools") await ping("activity");
+  if (type === "devtools") await ping("activity");
   return { ok: true };
 });

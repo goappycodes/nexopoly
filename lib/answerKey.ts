@@ -30,7 +30,7 @@ export interface AnswerKey {
     impact_on: string;
   }[];
   red_herrings: { id: string; title: string; penalty: number; penalise_if: string; no_penalty_if: string }[];
-  recommendation: { best: string[]; conditions_that_count: string[]; inject2_correct_response: string };
+  recommendation: { best: string[]; conditions_that_count: string[]; inject2_correct_response?: string };
   cfo_answers: { topic: string; keywords: string[]; answer: string }[];
   cfo_fallback?: string;
 }

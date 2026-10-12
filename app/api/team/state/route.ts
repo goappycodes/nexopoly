@@ -1,7 +1,7 @@
 import { db, must } from "@/lib/db";
 import { handler, requireTeam } from "@/lib/session";
 import { getEvent, toPublic, driveAccess } from "@/lib/state";
-import { MANIFEST, INJECT2, README_FOLDER, citableIds, CASE_PUBLIC } from "@/lib/manifest";
+import { MANIFEST, README_FOLDER, citableIds, CASE_PUBLIC } from "@/lib/manifest";
 import { openRequests, usedSessions, sessionLimit, MINUTES_PER_SESSION } from "@/lib/queue";
 
 export const dynamic = "force-dynamic";
@@ -31,11 +31,8 @@ export const GET = handler(async () => {
   const access = driveAccess(e.phase);
   const files = access === "locked" ? [] : MANIFEST.filter((d) => !d.inject && (access === "all" || d.folder === README_FOLDER));
   const readSet = new Set((must(reads) as { inject_no: number }[]).map((r) => r.inject_no));
-  const inbox = access === "all"
-    ? [
-        ...(e.inject1_at ? MANIFEST.filter((d) => d.inject === 1).map((d) => ({ ...d, modified: e.inject1_at! })) : []),
-        ...(e.inject2_at ? [{ ...INJECT2, modified: e.inject2_at }] : []),
-      ].map((d) => ({ ...d, read: readSet.has(d.inject!) }))
+  const inbox = access === "all" && e.inject1_at
+    ? MANIFEST.filter((d) => d.inject === 1).map((d) => ({ ...d, modified: e.inject1_at!, read: readSet.has(d.inject!) }))
     : [];
 
   return {
@@ -48,7 +45,7 @@ export const GET = handler(async () => {
     claimedPbt: CASE_PUBLIC.claimed_pbt,
     company: CASE_PUBLIC.company,
     vishal: {
-      limit: sessionLimit(e, team),
+      limit: sessionLimit(team),
       used: used.get(team.id) ?? 0,
       request: mine && {
         id: mine.id,

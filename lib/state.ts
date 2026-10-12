@@ -10,15 +10,11 @@ export interface EventRow {
   phase_ends_at: string | null;
   paused: boolean;
   paused_remaining_ms: number | null;
-  vishal_sessions_per_team: number;
   queue_open: boolean;
   cfo_open: boolean;
   inject1_at: string | null;
-  inject2_at: string | null;
-  inject2_deadline: string | null;
   announcement: string | null;
   announcement_at: string | null;
-  focus_threshold: number;
   pitch_order: string[];
   pitch_index: number;
   pitch_ends_at: string | null;
@@ -34,11 +30,8 @@ export const toPublic = (e: EventRow): PublicState => ({
   queueOpen: e.queue_open,
   cfoOpen: e.cfo_open,
   inject1At: e.inject1_at,
-  inject2At: e.inject2_at,
-  inject2Deadline: e.inject2_deadline,
   announcement: e.announcement,
   announcementAt: e.announcement_at,
-  vishalSessionsPerTeam: e.vishal_sessions_per_team,
 });
 
 let lastTick = 0;
@@ -90,15 +83,13 @@ export async function setPhase(phase: Phase) {
   const now = new Date().toISOString();
   const patch: Partial<EventRow> = { phase, phase_started_at: now, paused: false, paused_remaining_ms: null, phase_ends_at: null };
   if (phase === "briefing") patch.phase_ends_at = inMinutes(10);
-  if (phase === "audit") patch.phase_ends_at = inMinutes(55);
+  if (phase === "audit") {
+    patch.phase_ends_at = inMinutes(55);
+    patch.queue_open = true;
+  }
   if (phase === "report") {
     patch.phase_ends_at = inMinutes(15);
     patch.cfo_open = false;
-    const e = await getEvent();
-    if (!e.inject2_at) {
-      patch.inject2_at = now;
-      patch.inject2_deadline = inMinutes(20);
-    }
   }
   if (phase === "closed") {
     patch.cfo_open = false;

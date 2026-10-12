@@ -38,11 +38,8 @@ export interface PublicState {
   queueOpen: boolean;
   cfoOpen: boolean;
   inject1At: string | null;
-  inject2At: string | null;
-  inject2Deadline: string | null;
   announcement: string | null;
   announcementAt: string | null;
-  vishalSessionsPerTeam: number;
 }
 
 export type FindingType = "Error" | "Leakage" | "Misrepresentation";
@@ -81,7 +78,6 @@ export interface ReportData {
   cashLeakage: number | null;
   adjustedOcf: number | null;
   cleared: ClearedItem[];
-  inject2Response: string;
   conditions: string[];
 }
 
@@ -91,7 +87,6 @@ export const LIMITS = {
   findings: 15,
   adjustments: 8,
   cleared: 5,
-  inject2Words: 80,
   conditionWords: 40,
   conditions: 3,
 };
@@ -104,7 +99,6 @@ export const emptyReport = (): ReportData => ({
   cashLeakage: null,
   adjustedOcf: null,
   cleared: [],
-  inject2Response: "",
   conditions: ["", "", ""],
 });
 

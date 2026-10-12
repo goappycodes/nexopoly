@@ -35,11 +35,11 @@ export async function GET(req: Request) {
   if (type === "scores") {
     const scores = must(await db().from("team_scores").select("*")) as any[];
     const map = new Map(scores.map((x) => [x.team_id, x]));
-    const rows: (string | number | null)[][] = [["Team", "Table", "Members", "AI (avg of 2 runs)", "Run variance", "Needs review", "Accepted", "Final AI", "Edit reason", "Pitch", "Total"]];
+    const rows: (string | number | null)[][] = [["Team", "Table", "Members", "AI (avg of 2 runs)", "Run variance", "Needs review", "Accepted", "Final AI", "Edit reason", "Vishal", "Pitch", "Total"]];
     for (const t of teams) {
       const sc = map.get(t.id) ?? {};
       const ai = sc.final_ai ?? sc.ai_total ?? null;
-      rows.push([t.name, t.table_no, (t.members ?? []).join("; "), sc.ai_total, sc.variance, sc.needs_review ? "yes" : "", sc.accepted ? "yes" : "", sc.final_ai, sc.edit_reason, sc.pitch_marks, ai === null && sc.pitch_marks == null ? null : Number(ai ?? 0) + Number(sc.pitch_marks ?? 0)]);
+      rows.push([t.name, t.table_no, (t.members ?? []).join("; "), sc.ai_total, sc.variance, sc.needs_review ? "yes" : "", sc.accepted ? "yes" : "", sc.final_ai, sc.edit_reason, sc.vishal_marks, sc.pitch_marks, ai === null && sc.vishal_marks == null && sc.pitch_marks == null ? null : Number(ai ?? 0) + Number(sc.vishal_marks ?? 0) + Number(sc.pitch_marks ?? 0)]);
     }
     return file(csv(rows), "text/csv", "nexopoly-scores.csv");
   }

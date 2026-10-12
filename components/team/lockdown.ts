@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { api } from "../ui";
 
 export function logEvent(type: string, docId?: string | null, detail?: Record<string, unknown>) {
@@ -21,12 +21,9 @@ export const isOwnClip = (text: string) => !!text && text === ownClipboard;
 
 /**
  * Team-side integrity controls: blocks selection, right-click, drag and the copy / select-all /
- * save / print / view-source shortcuts, and reports focus loss. Returns whether the window is
- * currently away (document pane should blur).
+ * save / print / view-source shortcuts.
  */
 export function useLockdown(currentDoc: () => string | null) {
-  const [away, setAway] = useState(false);
-  const lastLoss = useRef(0);
   const lastBlockLog = useRef(0);
 
   useEffect(() => {
@@ -66,15 +63,6 @@ export function useLockdown(currentDoc: () => string | null) {
     const onSelect = (e: Event) => {
       if (!isEditable(e.target)) e.preventDefault();
     };
-    const lose = () => {
-      setAway(true);
-      if (Date.now() - lastLoss.current > 1500) {
-        lastLoss.current = Date.now();
-        logEvent("focus_loss", currentDoc());
-      }
-    };
-    const onBlur = () => lose();
-    const onVis = () => document.visibilityState === "hidden" && lose();
     const onBeforePrint = () => logEvent("print_attempt", currentDoc());
 
     window.addEventListener("keydown", onKey, true);
@@ -83,8 +71,6 @@ export function useLockdown(currentDoc: () => string | null) {
     document.addEventListener("cut", onCopy);
     document.addEventListener("dragstart", onDrag);
     document.addEventListener("selectstart", onSelect);
-    window.addEventListener("blur", onBlur);
-    document.addEventListener("visibilitychange", onVis);
     window.addEventListener("beforeprint", onBeforePrint);
     return () => {
       document.body.classList.remove("no-print");
@@ -94,13 +80,9 @@ export function useLockdown(currentDoc: () => string | null) {
       document.removeEventListener("cut", onCopy);
       document.removeEventListener("dragstart", onDrag);
       document.removeEventListener("selectstart", onSelect);
-      window.removeEventListener("blur", onBlur);
-      document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("beforeprint", onBeforePrint);
     };
   }, [currentDoc]);
-
-  return { away, back: () => setAway(false) };
 }
 
 /** Props for report fields: paste and drop are always blocked. */

@@ -17,7 +17,7 @@ export const POST = handler(async (req: Request) => {
   const docIds = (Array.isArray(b.docIds) ? b.docIds : []).filter((d: string) => ids.has(d)).slice(0, 8);
 
   const used = (await usedSessions(team.id)).get(team.id) ?? 0;
-  if (used >= sessionLimit(e, team)) throw new HttpError(403, "You have used all your sessions with Vishal.");
+  if (used >= sessionLimit(team)) throw new HttpError(403, "You have used all your sessions with Vishal.");
 
   const res = await db().from("expert_requests").insert({ team_id: team.id, question, doc_ids: docIds, position: await nextPosition() });
   // The partial unique index rejects a second open request, even on a double click.

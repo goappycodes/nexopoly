@@ -8,6 +8,10 @@ import type { ReportData } from "./types";
 
 const MODEL = "claude-opus-5-5";
 
+/** The report is worth 50 of 100. Vishal questions (30) and the pitch (20) are entered by the admin. */
+export const MAX_AI = 50;
+const REVIEW_GAP = 3;
+
 const SYSTEM = `You are grading a team's audit report for a business school finance hackathon.
 
 You will receive three inputs inside tags:
@@ -23,10 +27,10 @@ Rules:
 5. Be strict and consistent. When unsure whether a finding matches, give the lower score and explain why.
 
 Rubric:
-- Findings (40): (sum of matched issue points + partial credit - 5 per penalised red herring) / 3, floor 0, cap 40.
-- Quantification (20): restated PBT within [pbt_accept_min, pbt_accept_max] = 10; cash leakage within cash_leakage_tolerance_pct of restated.cash_leakage = 5; operating cash flow within ocf_tolerance of restated.operating_cash_flow, or an explicit statement that true operating cash flow is worse than reported = 5.
-- Recommendation (25): up to 15 for a recommendation in recommendation.best supported by at least 3 matched findings; 2 per condition matching conditions_that_count (max 6); 4 for a response to Inject 2 consistent with inject2_correct_response. If the recommendation is "Invest at proposed terms", cap this component at 5. If the team accepts the Inject 2 offer, subtract 5 (floor 0).
-- ai_total = findings_score + quantification.total + recommendation.total (max 85).
+- Findings (25): (sum of matched issue points + partial credit - 5 per penalised red herring) / 4.8, floor 0, cap 25.
+- Quantification (10): restated PBT within [pbt_accept_min, pbt_accept_max] = 5; cash leakage within cash_leakage_tolerance_pct of restated.cash_leakage = 2.5; operating cash flow within ocf_tolerance of restated.operating_cash_flow, or an explicit statement that true operating cash flow is worse than reported = 2.5.
+- Recommendation (15): up to 9 for a recommendation in recommendation.best supported by at least 3 matched findings; 2 per condition matching conditions_that_count (max 6). If the recommendation is "Invest at proposed terms", cap this component at 3.
+- ai_total = findings_score + quantification.total + recommendation.total (max 50).
 
 Return only the JSON object described by the output schema.`;
 
@@ -64,11 +68,10 @@ const SCHEMA = {
     recommendation: {
       type: "object",
       additionalProperties: false,
-      required: ["choice_score", "conditions_score", "inject2_score", "total", "reason"],
+      required: ["choice_score", "conditions_score", "total", "reason"],
       properties: {
         choice_score: { type: "number" },
         conditions_score: { type: "number" },
-        inject2_score: { type: "number" },
         total: { type: "number" },
         reason: { type: "string" },
       },
@@ -86,7 +89,7 @@ export interface GradeResult {
   red_herring_penalties: { id: string; finding_row: number; penalty: number; reason: string }[];
   findings_score: number;
   quantification: { pbt: number; leakage: number; ocf: number; total: number; reason: string };
-  recommendation: { choice_score: number; conditions_score: number; inject2_score: number; total: number; reason: string };
+  recommendation: { choice_score: number; conditions_score: number; total: number; reason: string };
   ai_total: number;
   injection_detected: boolean;
   flags: string[];
@@ -109,7 +112,6 @@ function reportText(teamName: string, members: string[], r: ReportData) {
     `Operating cash flow after adjustments: ${r.adjustedOcf ?? "-"}`,
     `Items examined and cleared:`,
     ...r.cleared.map((c) => `  ${c.item} (${c.docId}): ${c.reason}`),
-    `Response to the MD's offer: ${r.inject2Response}`,
     `Conditions:`,
     ...r.conditions.map((c, i) => `  ${i + 1}. ${c}`),
   ];
@@ -138,13 +140,14 @@ async function gradeOnce(client: Anthropic, keyJson: string, team: any, r: Repor
   return JSON.parse(text) as GradeResult;
 }
 
-/** Grades one submitted report twice, stores both runs, and flags a gap over 5 marks for human review. */
+/** Grades one submitted report twice, stores both runs, and flags a gap over 3 marks for human review. */
 export async function gradeTeam(teamId: string) {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not set");
   const client = new Anthropic();
   const key = await answerKey();
   const { cfo_answers, cfo_fallback, ...gradingKey } = key as any;
-  const keyJson = JSON.stringify(gradingKey);
+  const { inject2_correct_response, ...recommendation } = gradingKey.recommendation ?? {};
+  const keyJson = JSON.stringify({ ...gradingKey, recommendation });
   const team = must(await db().from("teams").select("*").eq("id", teamId).single());
   const row = must(await db().from("reports").select("*").eq("team_id", teamId).maybeSingle()) as any;
   if (!row || row.status !== "submitted") throw new Error("No submitted report");
@@ -157,7 +160,7 @@ export async function gradeTeam(teamId: string) {
   let injection = false;
   for (const res of runs) {
     if (res.status === "fulfilled") {
-      const total = Math.max(0, Math.min(85, res.value.ai_total));
+      const total = Math.max(0, Math.min(MAX_AI, res.value.ai_total));
       totals.push(total);
       injection ||= res.value.injection_detected;
       must(await db().from("grades").insert({ team_id: teamId, run_no: runNo++, json_result: res.value, total }));
@@ -174,7 +177,7 @@ export async function gradeTeam(teamId: string) {
         team_id: teamId,
         ai_total: avg,
         variance,
-        needs_review: totals.length < 2 || (variance ?? 0) > 5 || injection,
+        needs_review: totals.length < 2 || (variance ?? 0) > REVIEW_GAP || injection,
         accepted: false,
         updated_at: new Date().toISOString(),
       }),

@@ -41,7 +41,7 @@ export const GET = handler(async () => {
       last_seen_at: t.last_seen_at,
       cfo_used: t.cfo_used,
       vishal_used: used.get(t.id) ?? 0,
-      vishal_limit: sessionLimit(e, t),
+      vishal_limit: sessionLimit(t),
       stats: statMap.get(t.id) ?? null,
       report: repMap.get(t.id) ?? null,
       score: scoreMap.get(t.id) ?? null,

@@ -47,7 +47,6 @@ export function Viewer({
   onSelectNote,
   onCreateNote,
   canNote,
-  away,
   onBack,
   onClose,
 }: {
@@ -60,7 +59,6 @@ export function Viewer({
   onSelectNote: (id: string) => void;
   onCreateNote: (page: number, x: number | null, y: number | null, text: string) => Promise<void>;
   canNote: boolean;
-  away: boolean;
   onBack: () => void;
   onClose: () => void;
 }) {
@@ -156,7 +154,7 @@ export function Viewer({
       </div>
 
       <div ref={wrapRef} className="scroll-thin relative flex-1 overflow-auto">
-        <div className="flex min-h-full justify-center px-8 py-6" style={{ filter: away ? "blur(22px)" : undefined }}>
+        <div className="flex min-h-full justify-center px-8 py-6">
           <div className="relative shrink-0 bg-white shadow-e3" style={{ width, height }} onClick={clickPage}>
             <canvas ref={canvasRef} className="pointer-events-none block h-full w-full" />
             <div className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: wm, backgroundRepeat: "repeat" }} />
@@ -216,18 +214,6 @@ export function Viewer({
             )}
           </div>
         </div>
-        {away && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="rounded-3xl bg-white px-8 py-6 text-center shadow-e3">
-              <Icon name="visibility_off" size={40} className="text-primary" />
-              <div className="mt-3 font-display text-2xl text-ink">Return to the app</div>
-              <p className="mt-2 max-w-xs text-sm text-ink2">The document hides when this window loses focus. Each time is logged for your team.</p>
-              <Button className="mt-4" onClick={() => window.dispatchEvent(new Event("nexo-back"))}>
-                Back to the document
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="flex h-14 shrink-0 items-center justify-center gap-4 text-[#E3E3E3]">

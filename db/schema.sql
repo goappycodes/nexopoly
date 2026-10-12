@@ -123,6 +123,7 @@ create table if not exists team_scores (
   pitch_marks numeric,
   updated_at timestamptz not null default now()
 );
+alter table team_scores add column if not exists vishal_marks numeric;
 
 create table if not exists activity_log (
   id bigserial primary key,

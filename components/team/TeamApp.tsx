@@ -35,7 +35,7 @@ export default function TeamApp() {
   viewRef.current = view;
 
   const currentDoc = useCallback(() => (viewRef.current.kind === "doc" ? viewRef.current.docId : null), []);
-  const { away, back } = useLockdown(currentDoc);
+  useLockdown(currentDoc);
   const { notes, folders, create, update, remove } = useNotes(!!data);
 
   // ---- Report state lives here so notes can be promoted into it. ----
@@ -89,20 +89,12 @@ export default function TeamApp() {
     saveReport();
   }, [view.kind, saveReport]);
 
-  // ---- Toasts, inject arrivals, return-to-app. ----
+  // ---- Toasts and inject arrivals. ----
   useEffect(() => {
     const t = (e: Event) => setToast((e as CustomEvent).detail);
-    const b = () => back();
     window.addEventListener("nexo-toast", t);
-    window.addEventListener("nexo-back", b);
-    return () => {
-      window.removeEventListener("nexo-toast", t);
-      window.removeEventListener("nexo-back", b);
-    };
-  }, [back]);
-  useEffect(() => {
-    if (view.kind !== "doc" && away) back();
-  }, [away, view.kind, back]);
+    return () => window.removeEventListener("nexo-toast", t);
+  }, []);
 
   const seenInbox = useRef<Set<string> | null>(null);
   useEffect(() => {
@@ -368,7 +360,6 @@ export default function TeamApp() {
                   setSelectedNote(n.id);
                 }}
                 canNote={canNote}
-                away={away}
                 onBack={goBack}
                 onClose={goBack}
               />
@@ -424,7 +415,6 @@ export default function TeamApp() {
                 team={data.team}
                 claimedPbt={data.claimedPbt}
                 docs={citableDocs}
-                inject2Delivered={!!st.inject2At}
                 onSubmit={submitReport}
               />
             </div>

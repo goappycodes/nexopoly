@@ -70,11 +70,10 @@ function Console({ data, reload }: { data: any; reload: () => void }) {
   const e = data.event;
   const now = useTick(500);
   const rem = remainingMs({ phaseEndsAt: e.phase_ends_at, paused: e.paused, pausedRemainingMs: e.paused_remaining_ms }, now);
-  const flagged = data.teams.filter((t: any) => (t.stats?.focus_losses ?? 0) >= e.focus_threshold).length;
 
   const tabs: { id: Tab; icon: string; label: string; badge?: number }[] = [
     { id: "control", icon: "tune", label: "Event control" },
-    { id: "teams", icon: "groups", label: "Live teams", badge: flagged },
+    { id: "teams", icon: "groups", label: "Live teams" },
     { id: "queue", icon: "record_voice_over", label: "Vishal queue", badge: data.queue.filter((q: any) => q.status === "waiting").length },
     { id: "desk", icon: "support_agent", label: "Accounts desk", badge: data.cfo.filter((q: any) => now - Date.parse(q.created_at) < 60_000 && !q.overridden_by_admin).length },
     { id: "grading", icon: "grading", label: "Grading & results" },
@@ -114,7 +113,7 @@ function Console({ data, reload }: { data: any; reload: () => void }) {
         </nav>
         <main className="scroll-thin mb-4 mr-4 flex-1 overflow-auto rounded-2xl bg-white p-6">
           {tab === "control" && <Control e={e} data={data} act={act} rem={rem} />}
-          {tab === "teams" && <Teams data={data} act={act} threshold={e.focus_threshold} />}
+          {tab === "teams" && <Teams data={data} act={act} />}
           {tab === "queue" && <QueuePanel data={data} act={act} now={now} />}
           {tab === "desk" && <DeskPanel data={data} act={act} now={now} />}
           {tab === "grading" && <Grading data={data} act={act} toast={setToast} />}
@@ -175,9 +174,9 @@ function Confirm({ label, icon, onYes, variant = "tonal", disabled, detail }: { 
 
 const STEPS: { at: string; label: string; icon: string; run: (act: Act) => Promise<unknown>; done: (e: any) => boolean; detail: string }[] = [
   { at: "0:00", label: "Open briefing", icon: "play_circle", run: (a) => a("phase", { phase: "briefing" }), done: (e) => e.phase !== "lobby", detail: "Teams see only the Read Me folder. 10-minute countdown." },
-  { at: "0:10", label: "Start audit", icon: "folder_open", run: (a) => a("phase", { phase: "audit" }), done: (e) => !["lobby", "briefing"].includes(e.phase), detail: "All folders unlock and the 55-minute timer starts. Findings table opens." },
+  { at: "0:10", label: "Start audit", icon: "folder_open", run: (a) => a("phase", { phase: "audit" }), done: (e) => !["lobby", "briefing"].includes(e.phase), detail: "All folders unlock, the 55-minute timer starts, the findings table opens and Vishal's queue opens." },
   { at: "0:35", label: "Push Inject 1", icon: "mark_email_unread", run: (a) => a("inject1"), done: (e) => !!e.inject1_at, detail: "The whistleblower email lands in every team's Inbox with a banner and sound." },
-  { at: "1:05", label: "Inject 2 + open report", icon: "assignment", run: (a) => a("phase", { phase: "report" }), done: (e) => !["lobby", "briefing", "audit"].includes(e.phase), detail: "Pushes the MD's WhatsApp (deadline = now + 20 min), closes the Accounts desk, unlocks the full report, starts the 15-minute timer." },
+  { at: "1:05", label: "Open report", icon: "assignment", run: (a) => a("phase", { phase: "report" }), done: (e) => !["lobby", "briefing", "audit"].includes(e.phase), detail: "Closes the Accounts desk, unlocks the full report, starts the 15-minute timer." },
   { at: "1:20", label: "Close submissions", icon: "lock", run: (a) => a("close_submissions"), done: (e) => ["closed", "pitches", "reveal", "results"].includes(e.phase), detail: "Locks reports and the Drive. Unsubmitted drafts are submitted automatically. (Also happens by itself when the report timer ends.)" },
   { at: "1:20", label: "Start pitches", icon: "co_present", run: (a) => a("phase", { phase: "pitches" }), done: (e) => ["pitches", "reveal", "results"].includes(e.phase), detail: "Projector switches to the pitch order and timer." },
   { at: "1:45", label: "Reveal answers", icon: "visibility", run: (a) => a("phase", { phase: "reveal" }), done: (e) => ["reveal", "results"].includes(e.phase), detail: "Projector shows the answer key summary." },
@@ -234,7 +233,7 @@ function Control({ e, data, act, rem }: { e: any; data: any; act: Act; rem: numb
       <div className="grid gap-4 md:grid-cols-2">
         <Toggle
           title="Vishal's queue"
-          hint="Open at 0:15, close at 1:15."
+          hint="Opens automatically when the audit starts. Turn it off to pause requests; it closes with submissions."
           on={e.queue_open}
           onChange={(v) => act("toggle", { key: "queue_open", value: v }, v ? "Queue opened" : "Queue closed")}
         />
@@ -317,11 +316,11 @@ const reportBadge = (r: any) => {
   return <span className="rounded-md bg-tint px-2 py-0.5 text-xs text-ink2">Drafting</span>;
 };
 
-function Teams({ data, act, threshold }: { data: any; act: Act; threshold: number }) {
+function Teams({ data, act }: { data: any; act: Act }) {
   const [open, setOpen] = useState<any>(null);
   return (
     <div>
-      <H sub={`Red flag at ${threshold} focus losses (change it in Setup). Click a row for that team's activity log.`}>Live teams</H>
+      <H sub="Click a row for that team's activity log.">Live teams</H>
       <table className="w-full text-sm">
         <thead>
           <tr className="h-10 border-b border-line text-left text-xs text-ink2">
@@ -331,7 +330,6 @@ function Teams({ data, act, threshold }: { data: any; act: Act; threshold: numbe
             <th className="font-medium">Notes</th>
             <th className="font-medium">Vishal</th>
             <th className="font-medium">CFO Qs</th>
-            <th className="font-medium">Focus losses</th>
             <th className="font-medium">Blocked</th>
             <th className="font-medium">2nd logins</th>
             <th className="font-medium">Report</th>
@@ -339,7 +337,6 @@ function Teams({ data, act, threshold }: { data: any; act: Act; threshold: numbe
         </thead>
         <tbody>
           {data.teams.map((t: any) => {
-            const fl = t.stats?.focus_losses ?? 0;
             return (
               <tr key={t.id} onClick={() => setOpen(t)} className="h-11 cursor-pointer border-b border-line hover:bg-hover">
                 <td className="pl-2">
@@ -355,12 +352,6 @@ function Teams({ data, act, threshold }: { data: any; act: Act; threshold: numbe
                   {t.vishal_used}/{t.vishal_limit}
                 </td>
                 <td>{t.cfo_used}/2</td>
-                <td>
-                  <span className={fl >= threshold ? "flex items-center gap-1 font-bold text-danger" : ""}>
-                    {fl >= threshold && <Icon name="flag" fill size={16} />}
-                    {fl}
-                  </span>
-                </td>
                 <td>{t.stats?.blocked ?? 0}</td>
                 <td className={(t.stats?.second_logins ?? 0) > 0 ? "font-bold text-danger" : ""}>{t.stats?.second_logins ?? 0}</td>
                 <td>{reportBadge(t.report)}</td>
@@ -404,7 +395,7 @@ function ActivityDialog({ team, onClose, act }: { team: any; onClose: () => void
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-line">
                   <td className="w-24 px-3 py-1.5 font-mono text-ink2">{new Date(r.created_at).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })}</td>
-                  <td className={`px-2 ${["focus_loss", "second_login", "devtools"].includes(r.event_type) ? "font-medium text-danger" : ""}`}>{r.event_type.replace("_", " ")}</td>
+                  <td className={`px-2 ${["second_login", "devtools"].includes(r.event_type) ? "font-medium text-danger" : ""}`}>{r.event_type.replace("_", " ")}</td>
                   <td className="px-2 font-mono">{r.doc_id ?? ""}</td>
                   <td className="px-2 text-ink2">{r.detail ? (r.detail.ms ? `${Math.round(r.detail.ms / 1000)}s` : r.detail.key ?? "") : ""}</td>
                 </tr>
@@ -577,7 +568,7 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
   return (
     <div>
       <div className="mb-4 flex items-start justify-between gap-4">
-        <H sub="Each report is graded twice by Claude. A gap over 5 marks, a failed run or a prompt-injection attempt flags it for review. Check the top 3 and every flagged report before publishing.">
+        <H sub="Total 100: report 50 (graded twice by Claude), Vishal questions 30 and pitch 20 (entered here). A gap over 3 marks, a failed run or a prompt-injection attempt flags a report for review. Check the top 3 and every flagged report before publishing.">
           Grading & results
         </H>
         <div className="flex shrink-0 gap-2">
@@ -595,10 +586,11 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
             <th className="pl-2 font-medium">#</th>
             <th className="font-medium">Team</th>
             <th className="font-medium">Report</th>
-            <th className="font-medium">AI /85</th>
+            <th className="font-medium">AI /50</th>
             <th className="font-medium">Gap</th>
             <th className="font-medium">Final AI</th>
-            <th className="font-medium">Pitch /15</th>
+            <th className="font-medium">Vishal /30</th>
+            <th className="font-medium">Pitch /20</th>
             <th className="font-medium">Total</th>
             <th />
           </tr>
@@ -624,7 +616,7 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
                   )}
                 </td>
                 <td className="font-mono">{s.ai_total ?? "—"}</td>
-                <td className={`font-mono ${(s.variance ?? 0) > 5 ? "font-bold text-danger" : ""}`}>{s.variance ?? "—"}</td>
+                <td className={`font-mono ${(s.variance ?? 0) > 3 ? "font-bold text-danger" : ""}`}>{s.variance ?? "—"}</td>
                 <td>
                   <div className="flex items-center gap-1">
                     <input value={e.ai} onChange={(x) => setEdits({ ...edits, [t.id]: { ...e, ai: x.target.value } })} placeholder={String(s.final_ai ?? s.ai_total ?? "")} className="h-8 w-16 rounded border border-outline px-2 font-mono text-xs" />
@@ -633,6 +625,13 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
                       Accept
                     </Button>
                   </div>
+                </td>
+                <td>
+                  <input
+                    defaultValue={s.vishal_marks ?? ""}
+                    onBlur={(x) => x.target.value !== String(s.vishal_marks ?? "") && x.target.value !== "" && act("vishal_marks", { teamId: t.id, marks: Number(x.target.value) }, "Vishal marks saved")}
+                    className="h-8 w-14 rounded border border-outline px-2 font-mono text-xs"
+                  />
                 </td>
                 <td>
                   <input
@@ -697,13 +696,12 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
 const total = (t: any) => {
   const s = t.score;
   if (!s) return 0;
-  return Math.round((Number(s.final_ai ?? s.ai_total ?? 0) + Number(s.pitch_marks ?? 0)) * 10) / 10;
+  return Math.round((Number(s.final_ai ?? s.ai_total ?? 0) + Number(s.vishal_marks ?? 0) + Number(s.pitch_marks ?? 0)) * 10) / 10;
 };
 
 function Setup({ e, data, act }: { e: any; data: any; act: Act }) {
   const [count, setCount] = useState(String(Math.max(data.teams.length, 10)));
   const [confirm, setConfirm] = useState("");
-  const recommended = Number(count) > 10 ? 1 : 2;
   return (
     <div className="space-y-8">
       <div>
@@ -724,22 +722,6 @@ function Setup({ e, data, act }: { e: any; data: any; act: Act }) {
             </div>
           ))}
         </div>
-      </div>
-
-      <div>
-        <H sub={`Each session takes about 3 minutes with the walk. With ${count} teams we suggest ${recommended} per team so the queue fits in 60 minutes.`}>Sessions with Vishal per team</H>
-        <div className="flex gap-2">
-          {[1, 2, 3].map((n) => (
-            <Button key={n} variant={e.vishal_sessions_per_team === n ? "filled" : "outlined"} onClick={() => act("config", { vishal_sessions_per_team: n }, `Set to ${n}`)}>
-              {n}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <H sub="Teams at or above this many focus losses are flagged red in Live teams.">Focus-loss alert threshold</H>
-        <input defaultValue={e.focus_threshold} onBlur={(x) => act("config", { focus_threshold: Number(x.target.value) }, "Threshold saved")} className="h-10 w-24 rounded-full border border-outline px-4 text-sm" inputMode="numeric" />
       </div>
 
       <div className="rounded-2xl border border-[#F2B8B5] p-5">
