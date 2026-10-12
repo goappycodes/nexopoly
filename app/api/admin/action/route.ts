@@ -10,10 +10,11 @@ import { PHASES, type Phase } from "@/lib/types";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const PEAKS = [
-  "Kanchenjunga", "Makalu", "Lhotse", "Annapurna", "Dhaulagiri", "Nanda Devi", "Kamet", "Trishul", "Pandim", "Kabru",
-  "Siniolchu", "Jongsong", "Chomolhari", "Shivling", "Nun Kun", "Satopanth", "Chaukhamba", "Bandarpunch", "Kedarnath", "Neelkanth",
-  "Tiger Hill", "Sandakphu", "Phalut", "Singalila", "Kalimpong", "Teesta", "Rangit", "Mahananda", "Torsa", "Jaldhaka",
+const TEAM_NAMES = [
+  "Cash Ka Chakkar", "The Profit Police", "Ledger Legends", "Paisa Patrol", "The Audit Addas",
+  "Balance Breakers", "Cash Chasers", "The Number Nakhre", "Profit Detectives", "Ledger Looters",
+  "The Fraud Files", "Paisa Detectives", "The Audit Squad", "Cashflow Cops", "The Balance Bandits",
+  "Ledger Ke Khiladi", "The Money Sleuths", "Profit Pe Nazar", "The Number Ninjas", "Hisaab Kitaab Gang",
 ];
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const newCode = () => Array.from({ length: 6 }, () => ALPHABET[randomInt(ALPHABET.length)]).join("");
@@ -27,12 +28,12 @@ export const POST = handler(async (req: Request) => {
   switch (a) {
     // ---------- setup ----------
     case "setup_teams": {
-      const count = Math.min(Math.max(1, Number(b.count) || 0), PEAKS.length);
+      const count = Math.min(Math.max(1, Number(b.count) || 0), TEAM_NAMES.length);
       const existing = must(await db().from("teams").select("name,code")) as { name: string; code: string }[];
       const names = new Set(existing.map((t) => t.name));
       const codes = new Set(existing.map((t) => t.code));
       const rows = [];
-      for (const name of PEAKS) {
+      for (const name of TEAM_NAMES) {
         if (names.size + rows.length >= count) break;
         if (names.has(name)) continue;
         let code = newCode();

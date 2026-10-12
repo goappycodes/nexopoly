@@ -15,7 +15,8 @@ export const POST = handler(async (req: Request) => {
   if (!you) throw new HttpError(400, "Enter your own name.");
 
   const team = must(await db().from("teams").select("*").eq("code", code).maybeSingle()) as any;
-  if (!team || team.name.toLowerCase() !== name.toLowerCase()) throw new HttpError(401, "That team name and code don't match.");
+  const norm = (x: string) => x.trim().replace(/\s+/g, " ").toLowerCase();
+  if (!team || norm(team.name) !== norm(name)) throw new HttpError(401, "That team name and code don't match.");
 
   const tableNo = String(body.table ?? "").trim().slice(0, 10);
   const members = (Array.isArray(body.members) ? body.members : []).map((m: unknown) => String(m ?? "").trim().slice(0, 60)).filter(Boolean).slice(0, 5);
