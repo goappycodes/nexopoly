@@ -1,11 +1,12 @@
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
 import { db, must, ping } from "./db";
 import { answerKey } from "./answerKey";
 import { sanitize } from "./reports";
 import type { ReportData } from "./types";
 
-const MODEL = "claude-opus-5-5";
+// Graded through OpenRouter. Override the model with GRADER_MODEL (any OpenRouter model with structured outputs).
+const MODEL = process.env.GRADER_MODEL || "anthropic/claude-sonnet-5.5";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 /** The report is worth 50 of 100. Vishal questions (30) and the pitch (20) are entered by the admin. */
 export const MAX_AI = 50;
@@ -97,32 +98,41 @@ function reportText(teamName: string, members: string[], r: ReportData) {
   return lines.join("\n");
 }
 
-async function gradeOnce(client: Anthropic, keyJson: string, team: any, r: ReportData): Promise<GradeResult> {
+export async function gradeOnce(keyJson: string, team: any, r: ReportData): Promise<GradeResult> {
   const reportJson = JSON.stringify({ team: team.name, members: team.members, ...r }, null, 1);
-  const stream = client.beta.messages.stream({
-    model: MODEL,
-    max_tokens: 32000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-    output_config: { effort: "high", format: { type: "json_schema", schema: SCHEMA } },
-    system: SYSTEM,
-    messages: [
-      {
-        role: "user",
-        content: `<answer_key>\n${keyJson}\n</answer_key>\n\n<report_json>\n${reportJson}\n</report_json>\n\n<report_text>\n${reportText(team.name, team.members ?? [], r)}\n</report_text>`,
-      },
-    ],
-  } as any);
-  const msg: any = await stream.finalMessage();
-  if (msg.stop_reason === "refusal") throw new Error("The grader declined this report");
-  const text = (msg.content as any[]).filter((b) => b.type === "text").map((b) => b.text).join("");
-  return JSON.parse(text) as GradeResult;
+  const res = await fetch(OPENROUTER_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "Nexopoly grader" },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 16000,
+      reasoning: { effort: "medium" },
+      response_format: { type: "json_schema", json_schema: { name: "grade", strict: true, schema: SCHEMA } },
+      provider: { require_parameters: true },
+      messages: [
+        { role: "system", content: SYSTEM },
+        {
+          role: "user",
+          content: `<answer_key>\n${keyJson}\n</answer_key>\n\n<report_json>\n${reportJson}\n</report_json>\n\n<report_text>\n${reportText(team.name, team.members ?? [], r)}\n</report_text>`,
+        },
+      ],
+    }),
+    signal: AbortSignal.timeout(240_000),
+  });
+  const data: any = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(`Grader error (${res.status}): ${data.error?.message ?? "no response"}`);
+  const choice = data.choices?.[0];
+  if (choice?.finish_reason === "content_filter" || choice?.message?.refusal) throw new Error("The grader declined this report");
+  const text = String(choice?.message?.content ?? "");
+  const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+  const out = JSON.parse(json) as GradeResult;
+  if (typeof out.ai_total !== "number" || typeof out.findings_score !== "number") throw new Error("The grader returned an incomplete result");
+  return out;
 }
 
 /** Grades one submitted report twice, stores both runs, and flags a gap over 3 marks for human review. */
 export async function gradeTeam(teamId: string) {
-  if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not set");
-  const client = new Anthropic();
+  if (!process.env.OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not set");
   const key = await answerKey();
   const { cfo_answers, cfo_fallback, ...gradingKey } = key as any;
   delete gradingKey.recommendation;
@@ -132,7 +142,7 @@ export async function gradeTeam(teamId: string) {
   if (!row || row.status !== "submitted") throw new Error("No submitted report");
   const r = sanitize(row.data);
 
-  const runs = await Promise.allSettled([gradeOnce(client, keyJson, team, r), gradeOnce(client, keyJson, team, r)]);
+  const runs = await Promise.allSettled([gradeOnce(keyJson, team, r), gradeOnce(keyJson, team, r)]);
   const prev = must(await db().from("grades").select("run_no").eq("team_id", teamId).order("run_no", { ascending: false }).limit(1)) as any[];
   let runNo = (prev[0]?.run_no ?? 0) + 1;
   const totals: number[] = [];

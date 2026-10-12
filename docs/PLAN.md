@@ -17,7 +17,7 @@ Nexopoly is the web app for the NEXIS School of Business finance hackathon on **
 | Evidence Locker | 8 cards, 100 credits | **Removed**, along with credits. Every issue can be proved from the free files. |
 | Expert console | Vishal's phone screen with a hint sheet | **Removed.** Vishal has no screen and no hint sheet; he decides his own hints. The queue runs on the projector, and the admin presses **Start** when Vishal sits with a team. When the 2 minutes are up, "Time up" tells Vishal to move to the next team. |
 | Fallback | Printed case pack if P0 isn't ready by 9:00 | No fallback plan. Everything ships. |
-| Grader temperature | 0 | Claude Opus 5.5 does not accept `temperature`. Consistency comes from structured JSON output plus two runs per report, with a gap over 5 marks flagged for human review. |
+| Grader temperature | default | Consistency comes from structured JSON output plus two runs per report, with a gap over 3 marks flagged for human review. |
 
 ## 2. Roles
 
@@ -85,7 +85,7 @@ Pipeline (in `case/`, local only): case-data model → validation of every recon
 - **Auth**: an HS256 JWT in an httpOnly cookie (`jose`). The team cookie carries a session id that must match `teams.active_session_id`.
 - **Answer key**: lives only in the private `secure` bucket. It is read by `lib/answerKey.ts` (marked server-only) for CFO answer matching, grading and the projector reveal. No team route returns any part of it; `scripts/smoke.ts` checks this.
 - **Report PDF**: `pdf-lib` builds a fixed, branded layout (NEXIS logo, team, timestamp, "SUBMITTED REPORT" watermark). The JSON stored next to it is authoritative.
-- **AI grading**: `lib/grading.ts` uses Claude Opus 5.5 (`claude-opus-5-5`) with structured JSON output (`output_config.format`), effort `high`, and server-side refusal fallback. Each report is graded in 2 parallel runs. The admin sees the average, the gap between runs, flags and per-issue reasons, and can accept or edit with a reason, then enters pitch marks and publishes the leaderboard.
+- **AI grading**: `lib/grading.ts` calls OpenRouter (`OPENROUTER_API_KEY`) with `anthropic/claude-sonnet-5.5` by default (override with `GRADER_MODEL`), strict JSON-schema output and medium reasoning effort. Each report is graded in 2 parallel runs. The admin sees the average, the gap between runs, flags and per-issue reasons, and can accept or edit with a reason, then enters pitch marks and publishes the leaderboard.
 
 ## 7. Data model
 

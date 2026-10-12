@@ -522,7 +522,7 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
   return (
     <div>
       <div className="mb-4 flex items-start justify-between gap-4">
-        <H sub="Total 100: report 50 (graded twice by Claude), Vishal questions 30 and pitch 20 (entered here). A gap over 3 marks, a failed run or a prompt-injection attempt flags a report for review. Check the top 3 and every flagged report before publishing.">
+        <H sub="Total 100: report 50 (graded twice by AI), Vishal questions 30 and pitch 20 (entered here). A gap over 3 marks, a failed run or a prompt-injection attempt flags a report for review. Check the top 3 and every flagged report before publishing.">
           Grading & results
         </H>
         <div className="flex shrink-0 gap-2">
