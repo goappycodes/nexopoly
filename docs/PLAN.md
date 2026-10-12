@@ -93,4 +93,4 @@ Pipeline (in `case/`, local only): case-data model → validation of every recon
 
 ## 8. Scoring (from the brief)
 
-Total 100. AI grades the report out of 50: Findings 25, Quantification 10, Recommendation 15. The admin enters Vishal questions out of 30 (quality of the questions the team asked) and Pitch out of 20. Red herrings cost −5 each when called fraud. The grader prompt is in `lib/grading.ts`.
+Total 100. AI grades the report out of 50: Findings 30, Quantification 20. Teams submit an audit report with findings only; there is no invest or walk-away recommendation. The admin enters Vishal questions out of 30 (quality of the questions the team asked) and Pitch out of 20. Red herrings cost −5 each when called fraud. The grader prompt is in `lib/grading.ts`.

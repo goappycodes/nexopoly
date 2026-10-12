@@ -135,7 +135,7 @@ const check = (name: string, ok: boolean, extra?: unknown) => {
   check("report phase pushes no second inject", !s.inbox.some((i: any) => i.docId === "INJ-02"), s.inbox);
   check("INJ-02 not served", (await team.call(`/api/team/page?doc=INJ-02&p=1`)).status === 404);
 
-  check("report phase: full save", (await team.call("/api/team/report", "PUT", { data: { ...draft, summary: "Smoke test summary.", recommendation: "Invest with conditions" } })).status === 200);
+  check("report phase: full save", (await team.call("/api/team/report", "PUT", { data: { ...draft, summary: "Smoke test summary." } })).status === 200);
   check("submit", (await team.call("/api/team/report/submit", "POST", {})).status === 200);
   check("no edits after submit", (await team.call("/api/team/report", "PUT", { data: draft })).status === 403);
   rep = (await team.call("/api/team/report")).data;

@@ -27,17 +27,17 @@ Rules:
 5. Be strict and consistent. When unsure whether a finding matches, give the lower score and explain why.
 
 Rubric:
-- Findings (25): (sum of matched issue points + partial credit - 5 per penalised red herring) / 4.8, floor 0, cap 25.
-- Quantification (10): restated PBT within [pbt_accept_min, pbt_accept_max] = 5; cash leakage within cash_leakage_tolerance_pct of restated.cash_leakage = 2.5; operating cash flow within ocf_tolerance of restated.operating_cash_flow, or an explicit statement that true operating cash flow is worse than reported = 2.5.
-- Recommendation (15): up to 9 for a recommendation in recommendation.best supported by at least 3 matched findings; 2 per condition matching conditions_that_count (max 6). If the recommendation is "Invest at proposed terms", cap this component at 3.
-- ai_total = findings_score + quantification.total + recommendation.total (max 50).
+- Findings (30): (sum of matched issue points + partial credit - 5 per penalised red herring) / 4, floor 0, cap 30.
+- Quantification (20): restated PBT within [pbt_accept_min, pbt_accept_max] = 10; cash leakage within cash_leakage_tolerance_pct of restated.cash_leakage = 5; operating cash flow within ocf_tolerance of restated.operating_cash_flow, or an explicit statement that true operating cash flow is worse than reported = 5.
+- ai_total = findings_score + quantification.total (max 50).
+Teams do not make an investment recommendation; do not grade or reward one.
 
 Return only the JSON object described by the output schema.`;
 
 const SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["team", "matched_issues", "red_herring_penalties", "findings_score", "quantification", "recommendation", "ai_total", "injection_detected", "flags", "one_line_feedback"],
+  required: ["team", "matched_issues", "red_herring_penalties", "findings_score", "quantification", "ai_total", "injection_detected", "flags", "one_line_feedback"],
   properties: {
     team: { type: "string" },
     matched_issues: {
@@ -65,17 +65,6 @@ const SCHEMA = {
       required: ["pbt", "leakage", "ocf", "total", "reason"],
       properties: { pbt: { type: "number" }, leakage: { type: "number" }, ocf: { type: "number" }, total: { type: "number" }, reason: { type: "string" } },
     },
-    recommendation: {
-      type: "object",
-      additionalProperties: false,
-      required: ["choice_score", "conditions_score", "total", "reason"],
-      properties: {
-        choice_score: { type: "number" },
-        conditions_score: { type: "number" },
-        total: { type: "number" },
-        reason: { type: "string" },
-      },
-    },
     ai_total: { type: "number" },
     injection_detected: { type: "boolean" },
     flags: { type: "array", items: { type: "string" } },
@@ -89,7 +78,6 @@ export interface GradeResult {
   red_herring_penalties: { id: string; finding_row: number; penalty: number; reason: string }[];
   findings_score: number;
   quantification: { pbt: number; leakage: number; ocf: number; total: number; reason: string };
-  recommendation: { choice_score: number; conditions_score: number; total: number; reason: string };
   ai_total: number;
   injection_detected: boolean;
   flags: string[];
@@ -100,7 +88,6 @@ function reportText(teamName: string, members: string[], r: ReportData) {
   const lines = [
     `Team: ${teamName} (${members.join(", ")})`,
     `Executive summary: ${r.summary}`,
-    `Recommendation: ${r.recommendation || "(none)"}`,
     `Findings:`,
     ...r.findings.map(
       (f, i) => `  Row ${i + 1}: ${f.title} | ${f.type} | ${f.status} | impact ${f.impact ?? "-"} on ${f.impactOn || "-"} | evidence ${f.evidence.join(", ")}\n    ${f.description}`,
@@ -112,8 +99,6 @@ function reportText(teamName: string, members: string[], r: ReportData) {
     `Operating cash flow after adjustments: ${r.adjustedOcf ?? "-"}`,
     `Items examined and cleared:`,
     ...r.cleared.map((c) => `  ${c.item} (${c.docId}): ${c.reason}`),
-    `Conditions:`,
-    ...r.conditions.map((c, i) => `  ${i + 1}. ${c}`),
   ];
   return lines.join("\n");
 }
@@ -146,8 +131,8 @@ export async function gradeTeam(teamId: string) {
   const client = new Anthropic();
   const key = await answerKey();
   const { cfo_answers, cfo_fallback, ...gradingKey } = key as any;
-  const { inject2_correct_response, ...recommendation } = gradingKey.recommendation ?? {};
-  const keyJson = JSON.stringify({ ...gradingKey, recommendation });
+  delete gradingKey.recommendation;
+  const keyJson = JSON.stringify(gradingKey);
   const team = must(await db().from("teams").select("*").eq("id", teamId).single());
   const row = must(await db().from("reports").select("*").eq("team_id", teamId).maybeSingle()) as any;
   if (!row || row.status !== "submitted") throw new Error("No submitted report");

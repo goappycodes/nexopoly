@@ -116,7 +116,7 @@ function Screen({ d }: { d: DisplayData }) {
         ) : st.phase === "lobby" ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <div className="font-display text-[140px] leading-none">Nexopoly</div>
-            <div className="mt-6 text-4xl text-[#C4C7C5]">Himalayan Leaf Traders · investor due diligence</div>
+            <div className="mt-6 text-4xl text-[#C4C7C5]">Himalayan Leaf Traders · audit challenge</div>
             <div className="mt-16 rounded-full bg-[#1E1F20] px-10 py-5 text-3xl">Starting soon · {d.teamCount} teams</div>
           </div>
         ) : (

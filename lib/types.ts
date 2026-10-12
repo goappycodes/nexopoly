@@ -44,7 +44,6 @@ export interface PublicState {
 export type FindingType = "Error" | "Leakage" | "Misrepresentation";
 export type FindingStatus = "Proven" | "Needs verification";
 export type ImpactOn = "Profit" | "Cash" | "Balance sheet" | "Not quantified";
-export type Recommendation = "" | "Invest at proposed terms" | "Invest with conditions" | "Walk away";
 
 export interface Finding {
   id: string;
@@ -71,13 +70,11 @@ export interface ClearedItem {
 
 export interface ReportData {
   summary: string;
-  recommendation: Recommendation;
   findings: Finding[];
   adjustments: Adjustment[];
   cashLeakage: number | null;
   adjustedOcf: number | null;
   cleared: ClearedItem[];
-  conditions: string[];
 }
 
 export const LIMITS = {
@@ -86,19 +83,15 @@ export const LIMITS = {
   findings: 15,
   adjustments: 8,
   cleared: 5,
-  conditionWords: 40,
-  conditions: 3,
 };
 
 export const emptyReport = (): ReportData => ({
   summary: "",
-  recommendation: "",
   findings: [],
   adjustments: [],
   cashLeakage: null,
   adjustedOcf: null,
   cleared: [],
-  conditions: ["", "", ""],
 });
 
 export const NOTE_TAGS = ["Error", "Leakage", "Misrepresentation"] as const;

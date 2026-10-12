@@ -34,7 +34,6 @@ interface Key {
   };
   issues: Issue[];
   red_herrings: { id: string; title: string; penalty: number; penalise_if: string; no_penalty_if: string }[];
-  recommendation: { best: string[]; conditions_that_count: string[] };
 }
 interface FacultyData {
   company: string;
@@ -329,7 +328,7 @@ function Anomalies({ data, docs, onOpenDoc }: { data: FacultyData; docs: Map<str
           </section>
         )}
 
-        <section className="mt-8">
+        <section className="mb-4 mt-8">
           <h2 className="mb-2 font-display text-xl text-ink">Red herrings</h2>
           <p className="mb-3 text-sm text-ink2">Look suspicious but are legitimate. Teams lose marks only if they call one fraud.</p>
           <div className="space-y-2">
@@ -346,20 +345,6 @@ function Anomalies({ data, docs, onOpenDoc }: { data: FacultyData; docs: Map<str
           </div>
         </section>
 
-        <section className="mb-4 mt-8 rounded-xl bg-tint p-4 text-sm">
-          <h2 className="mb-1 font-medium">Expected recommendation</h2>
-          {k.recommendation.best.join(" or ") || "—"}
-          {k.recommendation.conditions_that_count.length > 0 && (
-            <>
-              <div className="mb-1 mt-3 font-medium">Conditions that earn marks</div>
-              <ul className="list-disc pl-5">
-                {k.recommendation.conditions_that_count.map((c, i) => (
-                  <li key={i}>{c}</li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
       </div>
     </div>
   );

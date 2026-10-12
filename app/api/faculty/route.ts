@@ -16,7 +16,6 @@ export const GET = handler(async () => {
       restated: k.restated,
       issues: k.issues,
       red_herrings: k.red_herrings,
-      recommendation: { best: k.recommendation?.best ?? [], conditions_that_count: k.recommendation?.conditions_that_count ?? [] },
     };
   } catch (e: any) {
     keyError = e.message;

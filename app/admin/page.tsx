@@ -632,10 +632,9 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
                     </div>
                   ))}
                   <div className="mt-2">
-                    Findings {g.json_result?.findings_score} · Quant {g.json_result?.quantification?.total} · Rec {g.json_result?.recommendation?.total}
+                    Findings {g.json_result?.findings_score} · Quant {g.json_result?.quantification?.total}
                   </div>
                   <div className="mt-1 text-ink2">{g.json_result?.quantification?.reason}</div>
-                  <div className="mt-1 text-ink2">{g.json_result?.recommendation?.reason}</div>
                 </>
               )}
             </div>

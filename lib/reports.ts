@@ -19,7 +19,6 @@ export function sanitize(input: any): ReportData {
   const ids = new Set(citableIds());
   const r = emptyReport();
   r.summary = clampWords(input?.summary, LIMITS.summaryWords);
-  r.recommendation = pick(input?.recommendation, ["Invest at proposed terms", "Invest with conditions", "Walk away"] as const);
   r.findings = (Array.isArray(input?.findings) ? input.findings : []).slice(0, LIMITS.findings).map(
     (f: any, i: number): Finding => ({
       id: typeof f?.id === "string" ? f.id.slice(0, 40) : `f${i}`,
@@ -44,8 +43,6 @@ export function sanitize(input: any): ReportData {
     docId: ids.has(c?.docId) ? c.docId : "",
     reason: clampWords(c?.reason, 40),
   }));
-  const conds = Array.isArray(input?.conditions) ? input.conditions : [];
-  r.conditions = [0, 1, 2].map((i) => clampWords(conds[i], LIMITS.conditionWords));
   return r;
 }
 
@@ -184,34 +181,29 @@ export async function buildReportPdf(team: any, r: ReportData, submittedAt: stri
   };
 
   newPage();
-  text(CASE_PUBLIC.company + " - investor due diligence", { size: 18, f: bold, gap: 2 });
+  text(CASE_PUBLIC.company + " - audit report", { size: 18, f: bold, gap: 2 });
   text(`Prepared by ${team.name}${team.table_no ? `, table ${team.table_no}` : ""}`, { size: 10, color: rgb(0.35, 0.35, 0.35), gap: 10 });
 
   heading("1. Team");
   text(`${team.name}: ${(team.members ?? []).filter(Boolean).join(", ") || "-"}`);
   heading("2. Executive summary");
   text(r.summary);
-  heading("3. Recommendation");
-  text(r.recommendation || "Not selected", { f: bold });
-  heading(`4. Findings (${r.findings.length})`);
+  heading(`3. Findings (${r.findings.length})`);
   r.findings.forEach((f, i) => {
     text(`${i + 1}. ${f.title || "Untitled finding"}`, { f: bold, gap: 1 });
     text(`${f.type || "-"}  |  ${f.status || "-"}  |  Impact ${inr(f.impact)} on ${f.impactOn || "-"}  |  Evidence: ${f.evidence.join(", ") || "-"}`, { size: 8.5, indent: 12, color: rgb(0.35, 0.35, 0.35), gap: 1 });
     text(f.description, { indent: 12, gap: 6 });
   });
-  heading("5. Restated profit before tax");
+  heading("4. Restated profit before tax");
   text(`Management's profit before tax: ${inr(CASE_PUBLIC.claimed_pbt)}`);
   r.adjustments.forEach((a) => text(`${a.sign} ${inr(a.amount)}   ${a.description}`, { indent: 12, gap: 1 }));
   text(`Restated profit before tax: ${inr(restatedPbt(r))}`, { f: bold, gap: 6 });
-  heading("6. Cash");
+  heading("5. Cash");
   text(`Total cash leakage found: ${inr(r.cashLeakage)}`, { gap: 1 });
   text(`Operating cash flow after adjustments: ${inr(r.adjustedOcf)}`);
-  heading("7. Items examined and cleared");
+  heading("6. Items examined and cleared");
   if (!r.cleared.length) text("-");
   r.cleared.forEach((c) => text(`${c.item} (${c.docId || "-"}): ${c.reason}`, { gap: 3 }));
-  heading("8. Conditions, or what would change our mind");
-  r.conditions.forEach((c, i) => text(`${i + 1}. ${c || "-"}`, { gap: 3 }));
-
   return Buffer.from(await doc.save());
 }
 

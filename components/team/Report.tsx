@@ -173,7 +173,6 @@ export function ReportBuilder({
   const restated = claimedPbt + report.adjustments.reduce((s, a) => s + (a.amount ?? 0) * (a.sign === "+" ? 1 : -1), 0);
 
   const missing = [
-    !report.recommendation && "Recommendation",
     report.cashLeakage === null && "Total cash leakage",
     report.findings.some((f) => f.evidence.length === 0) && "Evidence on every finding",
   ].filter(Boolean) as string[];
@@ -184,7 +183,7 @@ export function ReportBuilder({
         <div className="overflow-hidden rounded-lg border border-line bg-white">
           <div className="h-2.5 bg-primary" />
           <div className="p-6">
-            <h1 className="font-display text-[32px] leading-tight text-ink">Due diligence report</h1>
+            <h1 className="font-display text-[32px] leading-tight text-ink">Audit report</h1>
             <p className="mt-2 text-sm text-ink2">
               Fixed template, graded against the answer key. Paste is disabled: type everything here. Cite Doc IDs as evidence. Saves automatically every few seconds.
             </p>
@@ -211,22 +210,11 @@ export function ReportBuilder({
           </div>
         </Section>
 
-        <Section n={2} title="Executive summary" hint="What an investor needs to know, in 150 words." locked={restLock}>
+        <Section n={2} title="Executive summary" hint="Your audit in brief: the key findings and what they mean for the accounts, in 150 words." locked={restLock}>
           <LimitedText value={report.summary} onChange={(v) => R({ summary: v })} max={LIMITS.summaryWords} rows={5} disabled={!restOpen} />
         </Section>
 
-        <Section n={3} title="Recommendation" hint="Required." locked={restLock}>
-          <div className="space-y-2">
-            {(["Invest at proposed terms", "Invest with conditions", "Walk away"] as const).map((o) => (
-              <label key={o} className="flex cursor-pointer items-center gap-3 text-sm text-ink">
-                <input type="radio" name="rec" disabled={!restOpen} checked={report.recommendation === o} onChange={() => R({ recommendation: o })} className="h-5 w-5 accent-[#0B57D0]" />
-                {o}
-              </label>
-            ))}
-          </div>
-        </Section>
-
-        <Section n={4} title={`Findings (${report.findings.length}/${LIMITS.findings})`} hint="One row per issue. At least one Doc ID as evidence. Promote notes to add rows with the Doc ID filled in." locked={!findingsOpen && !submitted ? "The report is locked." : null}>
+        <Section n={3} title={`Findings (${report.findings.length}/${LIMITS.findings})`} hint="One row per issue. At least one Doc ID as evidence. Promote notes to add rows with the Doc ID filled in." locked={!findingsOpen && !submitted ? "The report is locked." : null}>
           <div className="space-y-4">
             {report.findings.map((f, i) => (
               <div key={f.id} className="rounded-lg border border-line p-4">
@@ -278,7 +266,7 @@ export function ReportBuilder({
           </div>
         </Section>
 
-        <Section n={5} title="Restated profit before tax" hint="Start from management's figure and adjust. The restated figure is calculated for you." locked={restLock}>
+        <Section n={4} title="Restated profit before tax" hint="Start from management's figure and adjust. The restated figure is calculated for you." locked={restLock}>
           <div className="mb-3 flex items-center justify-between rounded-lg bg-tint px-4 py-2 text-sm">
             <span className="text-ink2">Management&apos;s profit before tax</span>
             <span className="font-mono font-medium">{inr(claimedPbt)}</span>
@@ -309,7 +297,7 @@ export function ReportBuilder({
           </div>
         </Section>
 
-        <Section n={6} title="Cash" hint="Required." locked={restLock}>
+        <Section n={5} title="Cash" hint="Required." locked={restLock}>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <div className="mb-1 text-xs text-ink2">Total cash leakage found</div>
@@ -322,7 +310,7 @@ export function ReportBuilder({
           </div>
         </Section>
 
-        <Section n={7} title="Items examined and cleared" hint="Things that looked suspicious but you judged legitimate, with the Doc ID and your reason." locked={restLock}>
+        <Section n={6} title="Items examined and cleared" hint="Things that looked suspicious but you judged legitimate, with the Doc ID and your reason." locked={restLock}>
           <div className="space-y-3">
             {report.cleared.map((c, i) => (
               <div key={i} className="grid gap-2 rounded-lg border border-line p-3 md:grid-cols-[1fr_180px_auto]">
@@ -340,22 +328,6 @@ export function ReportBuilder({
               <Icon name="add" size={18} /> Add item
             </Button>
           )}
-        </Section>
-
-        <Section n={8} title="Conditions, or what would change our mind" hint="Three rows, 40 words each." locked={restLock}>
-          <div className="space-y-3">
-            {[0, 1, 2].map((i) => (
-              <LimitedText
-                key={i}
-                value={report.conditions[i] ?? ""}
-                onChange={(v) => setReport((r) => ({ ...r, conditions: [0, 1, 2].map((j) => (j === i ? v : r.conditions[j] ?? "")) }))}
-                max={LIMITS.conditionWords}
-                rows={2}
-                disabled={!restOpen}
-                placeholder={`Condition ${i + 1}`}
-              />
-            ))}
-          </div>
         </Section>
 
         {restOpen && (
