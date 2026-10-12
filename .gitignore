@@ -10,3 +10,6 @@ next-env.d.ts
 case/
 # The brief lists every planted issue: never commit it.
 *.pdf
+
+.vercel
+.env*

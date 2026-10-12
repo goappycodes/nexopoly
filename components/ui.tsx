@@ -16,7 +16,7 @@ export function Brand({ dark = false, compact = false }: { dark?: boolean; compa
   return (
     <div className="flex items-center gap-2.5 select-none">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/nexis-icon.png" alt="NEXIS" className="h-9 w-9 object-contain" draggable={false} />
+      <img src="/brand/nexis-icon.png" alt="NEXIS" className={`h-9 w-9 object-contain ${dark ? "rounded-lg bg-white p-1" : ""}`} draggable={false} />
       {!compact && (
         <span className={`font-display text-[22px] leading-none tracking-[-0.01em] ${dark ? "text-[#E3E3E3]" : "text-ink2"}`}>Nexopoly</span>
       )}

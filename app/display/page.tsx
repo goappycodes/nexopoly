@@ -123,9 +123,11 @@ function Screen({ d }: { d: DisplayData }) {
           <>
             <section className="flex flex-[1.25] flex-col justify-center pr-12">
               <div className="text-[44px] text-[#A8C7FA]">{phaseLabel(st.phase)}</div>
-              <div className={`font-mono text-[min(22vw,300px)] font-light leading-none tabular-nums ${rem !== null && rem < 60_000 ? "text-[#F2B8B5]" : ""}`}>
-                {rem !== null ? fmtClock(rem) : "—"}
-              </div>
+              {rem !== null ? (
+                <div className={`font-mono text-[min(22vw,300px)] font-light leading-none tabular-nums ${rem < 60_000 ? "text-[#F2B8B5]" : ""}`}>{fmtClock(rem)}</div>
+              ) : (
+                <div className="mt-4 font-display text-[96px] leading-none">{st.phase === "closed" ? "Pens down" : "Stand by"}</div>
+              )}
               {st.paused && <div className="mt-2 text-4xl text-[#FDD663]">Paused</div>}
               <Timeline phase={st.phase} />
             </section>
@@ -164,7 +166,7 @@ function Queue({ d, now, queueOpen }: { d: DisplayData; now: number; queueOpen: 
   const ms = cur ? Date.parse(cur.endsAt) - now : 0;
   const next = d.queue[0];
   return (
-    <section className="flex w-[40%] flex-col rounded-[40px] bg-[#1E1F20] p-10">
+    <section className="flex w-[42%] min-w-0 flex-col rounded-[40px] bg-[#1E1F20] p-[min(2.5vw,40px)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 text-4xl">
           <Icon name="record_voice_over" size={44} className="text-[#A8C7FA]" /> Vishal&apos;s queue
@@ -174,25 +176,25 @@ function Queue({ d, now, queueOpen }: { d: DisplayData; now: number; queueOpen: 
 
       {cur ? (
         <div className={`mt-8 rounded-[32px] p-8 ${ms <= 0 ? "bg-[#8C1D18]" : "bg-[#0842A0]"}`}>
-          <div className="text-2xl text-[#D3E3FD]">{ms <= 0 ? "Time up" : "With Vishal now"}</div>
-          <div className="mt-2 flex items-end justify-between">
-            <div>
-              <div className="font-display text-[96px] leading-none">Table {cur.table}</div>
-              <div className="mt-2 text-3xl text-[#D3E3FD]">{cur.team}</div>
+          <div className="text-[min(1.7vw,26px)] text-[#D3E3FD]">{ms <= 0 ? "Time up" : "With Vishal now"}</div>
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-x-6">
+            <div className="min-w-0">
+              <div className="whitespace-nowrap font-display text-[min(5vw,96px)] leading-none">Table {cur.table}</div>
+              <div className="mt-2 truncate text-[min(2vw,30px)] text-[#D3E3FD]">{cur.team}</div>
             </div>
-            <div className="font-mono text-[96px] leading-none tabular-nums">{fmtClock(ms)}</div>
+            <div className="font-mono text-[min(5vw,96px)] leading-none tabular-nums">{fmtClock(ms)}</div>
           </div>
         </div>
       ) : d.justEnded ? (
         <div className="mt-8 rounded-[32px] bg-[#8C1D18] p-8">
-          <div className="font-display text-[72px] leading-none">Time up</div>
-          <div className="mt-3 text-3xl text-[#F9DEDC]">{next ? `Vishal, next: Table ${next.table} · ${next.team}` : "Queue is empty"}</div>
+          <div className="font-display text-[min(4.5vw,72px)] leading-none">Time up</div>
+          <div className="mt-3 text-[min(2vw,30px)] text-[#F9DEDC]">{next ? `Vishal, next: Table ${next.table} · ${next.team}` : "Queue is empty"}</div>
         </div>
       ) : (
         next && (
           <div className="mt-8 rounded-[32px] bg-[#2D2F31] p-8">
             <div className="text-2xl text-[#C4C7C5]">Next up</div>
-            <div className="mt-2 font-display text-[72px] leading-none">Table {next.table}</div>
+            <div className="mt-2 font-display text-[min(4.5vw,72px)] leading-none">Table {next.table}</div>
             <div className="mt-2 text-3xl text-[#C4C7C5]">{next.team}</div>
           </div>
         )
@@ -200,11 +202,11 @@ function Queue({ d, now, queueOpen }: { d: DisplayData; now: number; queueOpen: 
 
       <div className="mt-8 flex-1 space-y-3 overflow-hidden">
         {d.queue.slice(cur || d.justEnded ? 0 : 1, 9).map((q) => (
-          <div key={q.position} className="flex items-center gap-6 rounded-2xl bg-[#2D2F31] px-6 py-4 text-3xl">
-            <span className="w-12 font-mono text-[#A8C7FA]">{q.position}</span>
-            <span className="flex-1 truncate">{q.team}</span>
-            <span className="text-[#C4C7C5]">Table {q.table}</span>
-            <span className="w-28 text-right font-mono text-2xl text-[#8E918F]">{Math.max(0, Math.floor((now - Date.parse(q.waitingSince)) / 60000))} min</span>
+          <div key={q.position} className="flex items-center gap-4 rounded-2xl bg-[#2D2F31] px-5 py-3 text-[min(1.9vw,30px)]">
+            <span className="w-8 font-mono text-[#A8C7FA]">{q.position}</span>
+            <span className="whitespace-nowrap font-medium">Table {q.table}</span>
+            <span className="min-w-0 flex-1 truncate text-[#C4C7C5]">{q.team}</span>
+            <span className="whitespace-nowrap text-right font-mono text-[0.75em] text-[#8E918F]">{Math.max(0, Math.floor((now - Date.parse(q.waitingSince)) / 60000))} min</span>
           </div>
         ))}
         {d.queue.length === 0 && !cur && <div className="pt-10 text-center text-3xl text-[#8E918F]">{queueOpen ? "No one waiting. Press Ask Vishal." : "Queue opens soon."}</div>}

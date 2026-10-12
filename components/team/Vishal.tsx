@@ -109,12 +109,12 @@ export function VishalPanel({ vishal, onCancel }: { vishal: TeamState["vishal"];
   const [hidden, setHidden] = useState<string | null>(null);
   const r = vishal.request;
   const last = vishal.history[vishal.history.length - 1];
-  const justEnded = !r && last?.status === "done" && last.ended_at && now - Date.parse(last.ended_at) < 30_000;
+  const justEnded = (!r && last?.status === "done" && last.ended_at && now - Date.parse(last.ended_at) < 30_000) || (r?.status === "in_session" && r.endsAt && Date.parse(r.endsAt) <= now);
   const key = r ? `${r.id}:${r.status}` : justEnded ? `end:${last!.ended_at}` : null;
   if (!key || hidden === key) return null;
 
   let body: React.ReactNode;
-  if (r?.status === "in_session" && r.endsAt) {
+  if (r?.status === "in_session" && r.endsAt && Date.parse(r.endsAt) > now) {
     const ms = Date.parse(r.endsAt) - now;
     body = (
       <div className="p-4">

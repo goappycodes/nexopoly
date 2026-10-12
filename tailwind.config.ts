@@ -25,7 +25,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-roboto)", "Roboto", "Arial", "sans-serif"],
         display: ["'Google Sans'", "var(--font-roboto)", "Roboto", "sans-serif"],
-        mono: ["'Roboto Mono'", "ui-monospace", "monospace"],
+        mono: ["var(--font-mono)", "Roboto Mono", "ui-monospace", "monospace"],
       },
       boxShadow: {
         e1: "0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)",
