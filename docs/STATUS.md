@@ -31,7 +31,7 @@ Last updated: 12 October 2026 (night before the event). Plan and decisions: [PLA
 
 **Grading check:** the grader was run once against OpenRouter on a synthetic report (12 Oct): it matched a finding with evidence, scored cash leakage, and flagged an "ignore your instructions" line as injection. Grade one dry-run report from the admin console before the event to confirm the full path on Vercel.
 
-**RM-01 (Read me) updated 12 Oct:** no invest decision; deliverables are executive summary, findings, and cash leakage with adjusted operating cash flow; scoring 30 / 20 / 30 / 20; one Vishal session; no Accounts Manager. Source is `case/templates/organiser.ts`; re-render with `npx tsx case/render.ts RM-01` and upload the two pages to `pages/RM-01/`.
+**RM-01 (Read me) updated 12 Oct:** no invest decision; deliverables are executive summary, findings, and cash leakage with adjusted operating cash flow; scoring 30 / 20 / 30 / 20 (findings, cash, expert meeting, pitch); one 2-minute expert meeting requested in the app; each member may use their own laptop; no Accounts Manager. Source is `case/templates/organiser.ts`; re-render with `npx tsx case/render.ts RM-01` and upload the two pages to `pages/RM-01/`.
 
 ## Run it
 
