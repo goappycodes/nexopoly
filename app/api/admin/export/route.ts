@@ -35,7 +35,7 @@ export async function GET(req: Request) {
   if (type === "scores") {
     const scores = must(await db().from("team_scores").select("*")) as any[];
     const map = new Map(scores.map((x) => [x.team_id, x]));
-    const rows: (string | number | null)[][] = [["Team", "Table", "Members", "AI (avg of 2 runs)", "Run variance", "Needs review", "Accepted", "Final AI", "Edit reason", "Vishal", "Pitch", "Total"]];
+    const rows: (string | number | null)[][] = [["Team", "Table", "Members", "AI (avg of 2 runs)", "Run variance", "Needs review", "Accepted", "Final AI", "Edit reason", "Expert", "Pitch", "Total"]];
     for (const t of teams) {
       const sc = map.get(t.id) ?? {};
       const ai = sc.final_ai ?? sc.ai_total ?? null;

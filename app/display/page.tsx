@@ -169,14 +169,14 @@ function Queue({ d, now, queueOpen }: { d: DisplayData; now: number; queueOpen: 
     <section className="flex w-[42%] min-w-0 flex-col rounded-[40px] bg-[#1E1F20] p-[min(2.5vw,40px)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 text-4xl">
-          <Icon name="record_voice_over" size={44} className="text-[#A8C7FA]" /> Vishal&apos;s queue
+          <Icon name="record_voice_over" size={44} className="text-[#A8C7FA]" /> Expert meetings
         </div>
         <span className={`rounded-full px-5 py-2 text-xl ${queueOpen ? "bg-[#0F5223] text-[#C4EED0]" : "bg-[#444746] text-[#C4C7C5]"}`}>{queueOpen ? "Open" : "Closed"}</span>
       </div>
 
       {cur ? (
         <div className={`mt-8 rounded-[32px] p-8 ${ms <= 0 ? "bg-[#8C1D18]" : "bg-[#0842A0]"}`}>
-          <div className="text-[min(1.7vw,26px)] text-[#D3E3FD]">{ms <= 0 ? "Time up" : "With Vishal now"}</div>
+          <div className="text-[min(1.7vw,26px)] text-[#D3E3FD]">{ms <= 0 ? "Time up" : "Expert at table"}</div>
           <div className="mt-2 flex flex-wrap items-end justify-between gap-x-6">
             <div className="min-w-0">
               <div className="whitespace-nowrap font-display text-[min(5vw,96px)] leading-none">Table {cur.table}</div>
@@ -188,7 +188,7 @@ function Queue({ d, now, queueOpen }: { d: DisplayData; now: number; queueOpen: 
       ) : d.justEnded ? (
         <div className="mt-8 rounded-[32px] bg-[#8C1D18] p-8">
           <div className="font-display text-[min(4.5vw,72px)] leading-none">Time up</div>
-          <div className="mt-3 text-[min(2vw,30px)] text-[#F9DEDC]">{next ? `Vishal, next: Table ${next.table} · ${next.team}` : "Queue is empty"}</div>
+          <div className="mt-3 text-[min(2vw,30px)] text-[#F9DEDC]">{next ? `Next: Table ${next.table} · ${next.team}` : "Queue is empty"}</div>
         </div>
       ) : (
         next && (
@@ -209,7 +209,7 @@ function Queue({ d, now, queueOpen }: { d: DisplayData; now: number; queueOpen: 
             <span className="whitespace-nowrap text-right font-mono text-[0.75em] text-[#8E918F]">{Math.max(0, Math.floor((now - Date.parse(q.waitingSince)) / 60000))} min</span>
           </div>
         ))}
-        {d.queue.length === 0 && !cur && <div className="pt-10 text-center text-3xl text-[#8E918F]">{queueOpen ? "No one waiting. Press Ask Vishal." : "Queue opens soon."}</div>}
+        {d.queue.length === 0 && !cur && <div className="pt-10 text-center text-3xl text-[#8E918F]">{queueOpen ? "No one waiting." : "Queue opens soon."}</div>}
       </div>
     </section>
   );
@@ -307,7 +307,7 @@ function Leaderboard({ rows }: { rows: DisplayData["leaderboard"] }) {
             <div className="flex-1">
               <div className="font-display text-6xl">{r.team}</div>
               <div className="mt-1 text-2xl text-[#C4C7C5]">
-                Report {r.ai} · Vishal {r.vishal} · Pitch {r.pitch}
+                Report {r.ai} · Expert {r.vishal} · Pitch {r.pitch}
               </div>
             </div>
             <span className="font-mono text-7xl">{r.total}</span>

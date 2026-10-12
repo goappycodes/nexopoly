@@ -231,7 +231,7 @@ export default function TeamApp() {
               </span>
             )}
           </div>
-          <div className="hidden items-center gap-1.5 rounded-full bg-white px-3 py-2 text-sm text-ink2 shadow-e1 lg:flex" title="Sessions with Vishal left">
+          <div className="hidden items-center gap-1.5 rounded-full bg-white px-3 py-2 text-sm text-ink2 shadow-e1 lg:flex" title="Expert meetings left">
             <Icon name="record_voice_over" size={18} /> {left} left
           </div>
           <div className="relative">
@@ -298,9 +298,9 @@ export default function TeamApp() {
             onClick={() => setAskOpen(true)}
             disabled={!st.queueOpen || left <= 0 || !!data.vishal.request}
             className="mb-4 ml-1 flex h-14 w-fit items-center gap-3 rounded-2xl bg-white pl-4 pr-5 text-sm font-medium text-ink shadow-e1 transition hover:bg-[#EDF2FA] hover:shadow-e2 disabled:opacity-50 disabled:shadow-none"
-            title={!st.queueOpen ? "Vishal's queue is closed" : left <= 0 ? "No sessions left" : data.vishal.request ? "You are already in the queue" : "Ask Vishal"}
+            title={!st.queueOpen ? "Expert meetings aren't open yet" : left <= 0 ? "No meetings left" : data.vishal.request ? "Meeting already requested" : "Request Expert meeting"}
           >
-            <Icon name="record_voice_over" size={24} className="text-primary" /> Ask Vishal
+            <Icon name="record_voice_over" size={24} className="text-primary" /> Request Expert meeting
           </button>
           {nav.map((n) => (
             <div key={n.id}>
@@ -335,7 +335,7 @@ export default function TeamApp() {
             </div>
           ))}
           <div className="mt-auto space-y-4 px-3 pt-6 text-xs text-ink2">
-            <Meter label="Sessions with Vishal" used={data.vishal.used} total={data.vishal.limit} />
+            <Meter label="Expert meetings" used={data.vishal.used} total={data.vishal.limit} />
           </div>
         </nav>
 

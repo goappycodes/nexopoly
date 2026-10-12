@@ -114,7 +114,7 @@ export const POST = handler(async (req: Request) => {
     // ---------- Vishal queue ----------
     case "queue_start": {
       const open = await openRequests();
-      if (open.some((r) => r.status === "in_session")) throw new HttpError(409, "Vishal is already in a session. End it first.");
+      if (open.some((r) => r.status === "in_session")) throw new HttpError(409, "The expert is already in a meeting. End it first.");
       const target = b.id ? open.find((r) => r.id === b.id) : open.find((r) => r.status === "waiting");
       if (!target) throw new HttpError(404, "No team is waiting.");
       must(
@@ -229,7 +229,7 @@ export const POST = handler(async (req: Request) => {
     }
     case "vishal_marks": {
       const v = Number(b.marks);
-      if (!Number.isFinite(v) || v < 0 || v > 30) throw new HttpError(400, "Vishal marks must be 0–30.");
+      if (!Number.isFinite(v) || v < 0 || v > 30) throw new HttpError(400, "Expert marks must be 0–30.");
       must(await db().from("team_scores").upsert({ team_id: b.teamId, vishal_marks: v, updated_at: now }));
       await ping("grades");
       return { ok: true };

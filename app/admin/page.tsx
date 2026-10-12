@@ -74,7 +74,7 @@ function Console({ data, reload }: { data: any; reload: () => void }) {
   const tabs: { id: Tab; icon: string; label: string; badge?: number }[] = [
     { id: "control", icon: "tune", label: "Event control" },
     { id: "teams", icon: "groups", label: "Live teams" },
-    { id: "queue", icon: "record_voice_over", label: "Vishal queue", badge: data.queue.filter((q: any) => q.status === "waiting").length },
+    { id: "queue", icon: "record_voice_over", label: "Expert meetings", badge: data.queue.filter((q: any) => q.status === "waiting").length },
     { id: "grading", icon: "grading", label: "Grading & results" },
     { id: "setup", icon: "settings", label: "Setup" },
     { id: "exports", icon: "download", label: "Exports" },
@@ -172,7 +172,7 @@ function Confirm({ label, icon, onYes, variant = "tonal", disabled, detail }: { 
 
 const STEPS: { at: string; label: string; icon: string; run: (act: Act) => Promise<unknown>; done: (e: any) => boolean; detail: string }[] = [
   { at: "0:00", label: "Open briefing", icon: "play_circle", run: (a) => a("phase", { phase: "briefing" }), done: (e) => e.phase !== "lobby", detail: "Teams see only the Read Me folder. 10-minute countdown." },
-  { at: "0:10", label: "Start audit", icon: "folder_open", run: (a) => a("phase", { phase: "audit" }), done: (e) => !["lobby", "briefing"].includes(e.phase), detail: "All folders unlock, the 55-minute timer starts, the findings table opens and Vishal's queue opens." },
+  { at: "0:10", label: "Start audit", icon: "folder_open", run: (a) => a("phase", { phase: "audit" }), done: (e) => !["lobby", "briefing"].includes(e.phase), detail: "All folders unlock, the 55-minute timer starts, the findings table opens and expert meetings open." },
   { at: "0:35", label: "Push Inject 1", icon: "mark_email_unread", run: (a) => a("inject1"), done: (e) => !!e.inject1_at, detail: "The whistleblower email lands in every team's Inbox with a banner and sound." },
   { at: "1:05", label: "Open report", icon: "assignment", run: (a) => a("phase", { phase: "report" }), done: (e) => !["lobby", "briefing", "audit"].includes(e.phase), detail: "Unlocks the full report and starts the 15-minute timer." },
   { at: "1:20", label: "Close submissions", icon: "lock", run: (a) => a("close_submissions"), done: (e) => ["closed", "pitches", "reveal", "results"].includes(e.phase), detail: "Locks reports and the Drive. Unsubmitted drafts are submitted automatically. (Also happens by itself when the report timer ends.)" },
@@ -230,7 +230,7 @@ function Control({ e, data, act, rem }: { e: any; data: any; act: Act; rem: numb
 
       <div className="grid gap-4 md:grid-cols-2">
         <Toggle
-          title="Vishal's queue"
+          title="Expert meetings"
           hint="Opens automatically when the audit starts. Turn it off to pause requests; it closes with submissions."
           on={e.queue_open}
           onChange={(v) => act("toggle", { key: "queue_open", value: v }, v ? "Queue opened" : "Queue closed")}
@@ -325,7 +325,7 @@ function Teams({ data, act }: { data: any; act: Act }) {
             <th className="font-medium">Table</th>
             <th className="font-medium">Files</th>
             <th className="font-medium">Notes</th>
-            <th className="font-medium">Vishal</th>
+            <th className="font-medium">Expert</th>
             <th className="font-medium">Blocked</th>
             <th className="font-medium">2nd logins</th>
             <th className="font-medium">Report</th>
@@ -375,7 +375,7 @@ function ActivityDialog({ team, onClose, act }: { team: any; onClose: () => void
         {team.members?.join(", ") || "No members yet"} · code <span className="font-mono">{team.code}</span>
       </div>
       <div className="mb-4 flex flex-wrap gap-2">
-        <Button variant="outlined" onClick={() => act("add_session", { teamId: team.id }, "Added a Vishal session")}>+1 Vishal session</Button>
+        <Button variant="outlined" onClick={() => act("add_session", { teamId: team.id }, "Added an expert meeting")}>+1 expert meeting</Button>
         <Button variant="outlined" onClick={() => act("force_logout", { teamId: team.id }, "Signed out")}>Sign out device</Button>
         <Button variant="outlined" onClick={() => act("reset_code", { teamId: team.id }, "New code issued")}>Reset code</Button>
       </div>
@@ -410,7 +410,7 @@ function QueuePanel({ data, act, now }: { data: any; act: Act; now: number }) {
   const ms = cur ? Date.parse(cur.ends_at) - now : 0;
   return (
     <div className="space-y-6">
-      <H sub={`Press Start as Vishal sits with a team. At 0:00 the projector shows "Time up" and the next table. Average session: ${data.avgSessionSec ? fmtClock(data.avgSessionSec * 1000) : "—"}.`}>Vishal queue</H>
+      <H sub={`Press Start as the expert sits with a team. At 0:00 the projector shows "Time up" and the next table. Average session: ${data.avgSessionSec ? fmtClock(data.avgSessionSec * 1000) : "—"}.`}>Expert meetings</H>
       {cur ? (
         <div className="rounded-2xl bg-[#0842A0] p-6 text-white">
           <div className="flex items-start gap-6">
@@ -419,13 +419,13 @@ function QueuePanel({ data, act, now }: { data: any; act: Act; now: number }) {
               <div className="font-display text-4xl">
                 Table {cur.table_no} · {cur.team_name}
               </div>
-              <div className="mt-3 rounded-xl bg-white/10 p-3 text-[15px]">{cur.question}</div>
+              {cur.question && <div className="mt-3 rounded-xl bg-white/10 p-3 text-[15px]">{cur.question}</div>}
               {cur.doc_ids?.length > 0 && <div className="mt-2 font-mono text-xs text-[#D3E3FD]">{cur.doc_ids.join(" · ")}</div>}
             </div>
             <div className={`font-mono text-6xl tabular-nums ${ms <= 0 ? "text-[#F2B8B5]" : ""}`}>{fmtClock(ms)}</div>
           </div>
           <div className="mt-4 flex gap-2">
-            <input value={note} onChange={(x) => setNote(x.target.value)} placeholder="Vishal's one-line note (optional)" className="h-10 flex-1 rounded-full bg-white/15 px-4 text-sm text-white outline-none placeholder:text-white/60" />
+            <input value={note} onChange={(x) => setNote(x.target.value)} placeholder="Expert's one-line note (optional)" className="h-10 flex-1 rounded-full bg-white/15 px-4 text-sm text-white outline-none placeholder:text-white/60" />
             <Button variant="tonal" onClick={async () => { if (note) await act("queue_note", { id: cur.id, note }); await act("queue_end", { id: cur.id }, "Session ended"); setNote(""); }}>
               End session
             </Button>
@@ -452,7 +452,7 @@ function QueuePanel({ data, act, now }: { data: any; act: Act; now: number }) {
                 Table {q.table_no} · {q.team_name}
                 {q.skip_count > 0 && <span className="ml-2 rounded bg-[#FEF7E0] px-1.5 text-xs text-[#7A4F01]">skipped once</span>}
               </div>
-              <div className="mt-1 text-sm text-ink2">{q.question}</div>
+              {q.question && <div className="mt-1 text-sm text-ink2">{q.question}</div>}
               <div className="mt-1 text-xs text-ink2">waiting {Math.floor((now - Date.parse(q.created_at)) / 60000)} min {q.doc_ids?.length ? `· ${q.doc_ids.join(", ")}` : ""}</div>
             </div>
             <div className="flex items-center">
@@ -522,7 +522,7 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
   return (
     <div>
       <div className="mb-4 flex items-start justify-between gap-4">
-        <H sub="Total 100: report 50 (graded twice by AI), Vishal questions 30 and pitch 20 (entered here). A gap over 3 marks, a failed run or a prompt-injection attempt flags a report for review. Check the top 3 and every flagged report before publishing.">
+        <H sub="Total 100: report 50 (graded twice by AI), expert meeting 30 and pitch 20 (entered here). A gap over 3 marks, a failed run or a prompt-injection attempt flags a report for review. Check the top 3 and every flagged report before publishing.">
           Grading & results
         </H>
         <div className="flex shrink-0 gap-2">
@@ -543,7 +543,7 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
             <th className="font-medium">AI /50</th>
             <th className="font-medium">Gap</th>
             <th className="font-medium">Final AI</th>
-            <th className="font-medium">Vishal /30</th>
+            <th className="font-medium">Expert /30</th>
             <th className="font-medium">Pitch /20</th>
             <th className="font-medium">Total</th>
             <th />
@@ -583,7 +583,7 @@ function Grading({ data, act, toast }: { data: any; act: Act; toast: (m: string)
                 <td>
                   <input
                     defaultValue={s.vishal_marks ?? ""}
-                    onBlur={(x) => x.target.value !== String(s.vishal_marks ?? "") && x.target.value !== "" && act("vishal_marks", { teamId: t.id, marks: Number(x.target.value) }, "Vishal marks saved")}
+                    onBlur={(x) => x.target.value !== String(s.vishal_marks ?? "") && x.target.value !== "" && act("vishal_marks", { teamId: t.id, marks: Number(x.target.value) }, "Expert marks saved")}
                     className="h-8 w-14 rounded border border-outline px-2 font-mono text-xs"
                   />
                 </td>
