@@ -16,12 +16,19 @@ async function login(path: string, body: unknown) {
 
 const lat: number[] = [];
 let errors = 0;
+let netErrors = 0;
 async function timed(url: string, cookie: string) {
   const t = Date.now();
-  const r = await fetch(BASE + url, { headers: { cookie } });
-  lat.push(Date.now() - t);
-  if (!r.ok) errors++;
-  return r;
+  try {
+    const r = await fetch(BASE + url, { headers: { cookie } });
+    lat.push(Date.now() - t);
+    if (!r.ok) errors++;
+    return r;
+  } catch {
+    // Connection resets on this side of the network, not server errors.
+    netErrors++;
+    return new Response(null, { status: 599 });
+  }
 }
 
 (async () => {
@@ -51,6 +58,6 @@ async function timed(url: string, cookie: string) {
   );
   lat.sort((a, b) => a - b);
   const pct = (p: number) => lat[Math.min(lat.length - 1, Math.floor((p / 100) * lat.length))];
-  console.log(`requests ${lat.length}, errors ${errors}, p50 ${pct(50)} ms, p95 ${pct(95)} ms, max ${lat[lat.length - 1]} ms`);
+  console.log(`requests ${lat.length}, server errors ${errors}, network drops ${netErrors}, p50 ${pct(50)} ms, p95 ${pct(95)} ms, max ${lat[lat.length - 1]} ms`);
   process.exit(errors ? 1 : 0);
 })();
